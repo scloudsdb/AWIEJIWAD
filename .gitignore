@@ -120,6 +120,8 @@ apps/foldbox/README.internal.md
 
 # Unignore public assets 3mf files
 !apps/*/public/**/*.3mf
+!final-dist/**/*.3mf
+!Clicker-Generator/**/*.3mf
 
 # Bambu Studio CLI slicing output, dropped in the repo root by whatever ran last.
 result.json
