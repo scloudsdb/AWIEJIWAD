@@ -32,11 +32,11 @@ function imageSample(file: string, name: string): SampleInfo {
 
 export const SAMPLES: SampleInfo[] = [
   imageSample('ai3dlabs.png', 'A & I 3D Labs'),
-  imageSample('heart.png', 'Heart'),
-  imageSample('paw.png', 'Paw'),
-  imageSample('dog.png', 'Dog'),
-  imageSample('cheese.png', 'Cheese'),
-  imageSample('radiation.png', 'Radiation'),
+  imageSample('rocket.svg', 'Rocket'),
+  imageSample('coffee.svg', 'Coffee'),
+  imageSample('gamepad.svg', 'Gamepad'),
+  imageSample('crown.svg', 'Crown'),
+  imageSample('diamond.svg', 'Diamond'),
 ];
 
 // Bundled vector samples, surfaced as ready-to-use presets in the SVG panel.

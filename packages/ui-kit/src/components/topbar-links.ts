@@ -67,7 +67,7 @@ export function topbarLinks(opts: TopbarLinksOptions = {}): HTMLElement {
   }
 
   const leftGroup = el('div', { className: 'vl-topbar-group' }, [
-    ...(opts.appTitle ? [el('div', { className: 'vl-topbar-title', text: opts.appTitle, attrs: { style: 'font-weight: 800; font-size: 20px; padding-left: 16px; color: #fff; letter-spacing: 0.5px;' } })] : []),
+    ...(opts.appTitle ? [el('a', { className: 'vl-topbar-title', text: opts.appTitle, attrs: { href: 'https://ai3dlabs.site', style: 'font-weight: 800; font-size: 20px; padding-left: 16px; color: #fff; letter-spacing: 0.5px; text-decoration: none;' } })] : []),
   ]);
 
   return el('header', { className: 'vl-topbar' }, [
