@@ -23,6 +23,9 @@ fs.cpSync('apps/clicker-generator/dist', path.join(distPath, 'Clicker-Generator'
 // Copy CNAME
 fs.writeFileSync(path.join(distPath, 'CNAME'), 'ai3dlabs.site');
 
+// Create a dummy .gitignore to prevent the root .gitignore from ignoring .3mf files during gh-pages publish
+fs.writeFileSync(path.join(distPath, '.gitignore'), '# Empty gitignore to override root\n');
+
 console.log('Publishing to gh-pages branch...');
 ghpages.publish(distPath, {
   branch: 'gh-pages',
