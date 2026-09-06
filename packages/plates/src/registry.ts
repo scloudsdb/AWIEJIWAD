@@ -53,8 +53,8 @@ export const PLATES: PlateDef[] = [
 
 ];
 
-/** The A1's 256 x 256 plate — the one most people are printing on. */
-export const DEFAULT_PLATE: PlateChoice = 'a1';
+/** The Kobra 4 / S1 / X plate as default. */
+export const DEFAULT_PLATE: PlateChoice = 'kobra4';
 
 export function getPlate(id: string | null | undefined): PlateDef | null {
   return PLATES.find((p) => p.id === id) ?? null;
