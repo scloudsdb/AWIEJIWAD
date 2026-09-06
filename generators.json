@@ -1,0 +1,22 @@
+{
+  "$comment": "Registry of every tool. The hub renders its cards from this and CI builds from this. route: 'mw' (scad listing on MakerWorld) | 'app' (own-site app) | 'both'. external: true = lives outside this monorepo.",
+  "generators": [
+    {
+      "id": "clicker",
+      "name": "Image to Clicker",
+      "route": "both",
+      "status": "live",
+      "appUrl": "/Clicker-Generator/",
+      "mwUrl": "https://makerworld.com/en/models/2980346",
+      "blurb": "Turn any image, logo, or custom text into a clicker fidget."
+    },
+    {
+      "id": "name-keychain",
+      "name": "Name Keychain Generator",
+      "route": "both",
+      "status": "coming-soon",
+      "blurb": "Personalized plate-style name keychains with live font preview, pixel & script styles, multi-language, 1 to 3 colour layers, and AMS & no-AMS printing."
+    }
+  ],
+  "sellerTools": []
+}

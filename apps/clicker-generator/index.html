@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A&I 3D Clicker Generator</title>
+    <link rel="icon" type="image/png" href="./assets/favicon/ai3dlabsfaviconblack.png" />
+    <link rel="icon" type="image/png" href="./assets/favicon/ai3dlabsfaviconwhite.png" media="(prefers-color-scheme: dark)" />
+    <link rel="apple-touch-icon" href="./assets/favicon/ai3dlabsfaviconblack.png" />
+    <script>
+      (function() {
+        const saved = localStorage.getItem('clicker_theme');
+        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = saved || (systemDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
+    </script>
+
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

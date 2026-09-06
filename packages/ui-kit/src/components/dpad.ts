@@ -1,0 +1,129 @@
+import { el } from '../dom';
+import { ICONS, svgEl } from '../icons';
+
+/* Directional pad: nudge a placed element up/down/left/right, rotate it from
+   the top corners, and reset from the dashed center. Ported from the clicker's
+   "switch position" pad so every generator that places something reuses it. */
+
+export interface DpadOptions {
+  onMove?: (dir: 'up' | 'down' | 'left' | 'right') => void;
+  /** Called with the signed delta in degrees (left is positive, like the app). */
+  onRotate?: (deltaDeg: number) => void;
+  onReset?: () => void;
+  /** Degrees per rotate press. Default 3. */
+  rotateStep?: number;
+  /**
+   * Render the two rotate corners. Default `true`.
+   *
+   * Set `false` for a pad that only translates. Without it those corners render as buttons
+   * whose handler is optional-chained to nothing — two controls that look live and do
+   * nothing, which is worse than not offering them. The grid uses named areas, so the top
+   * corners simply stay empty and `up` remains centred.
+   */
+  rotate?: boolean;
+  /** Initial readout text under the pad. Omit to hide the readout. */
+  readout?: string;
+}
+
+export interface DpadHandle {
+  root: HTMLElement;
+  /** Update the readout line (creates it if the pad started without one). */
+  setReadout(text: string): void;
+}
+
+function padBtn(cls: string, icon: string, label: string, onClick: () => void): HTMLButtonElement {
+  const btn = el('button', {
+    className: `vl-dpad-btn ${cls}`,
+    attrs: { type: 'button', 'aria-label': label, title: label },
+  });
+  btn.append(svgEl(icon));
+
+  // Hold-to-repeat: fire immediately on press, then repeat after a delay.
+  let holdTimer: ReturnType<typeof setTimeout> | null = null;
+  let repeatTimer: ReturnType<typeof setInterval> | null = null;
+
+  const stopRepeat = () => {
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+    if (repeatTimer) { clearInterval(repeatTimer); repeatTimer = null; }
+  };
+
+  btn.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;           // left button only
+    e.preventDefault();
+    btn.setPointerCapture(e.pointerId);   // keep events even if pointer drifts
+    onClick();
+    holdTimer = setTimeout(() => {
+      repeatTimer = setInterval(onClick, 50);
+    }, 300);
+  });
+  btn.addEventListener('pointerup', stopRepeat);
+  btn.addEventListener('pointercancel', stopRepeat);
+  btn.addEventListener('pointerleave', stopRepeat);
+
+  /* Keyboard activation.
+
+     Hold-to-repeat needs `pointerdown`, but a button activated by Enter or Space fires only
+     `click` — so a pad driven entirely from pointer events is invisible to the keyboard. The
+     control it replaced used a delegated `click` handler and worked; this is what keeps that.
+
+     `detail === 0` is the discriminator: a synthesised click from the keyboard reports zero
+     clicks, a real mouse click reports one or more. Without the guard a mouse press would
+     fire the action twice — once on pointerdown and again on the click that follows. */
+  btn.addEventListener('click', (e) => {
+    if (e.detail === 0) onClick();
+  });
+  // Prevent context menu on long-press (mobile)
+  btn.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  return btn;
+}
+
+export function dpad(opts: DpadOptions = {}): DpadHandle {
+  const step = opts.rotateStep ?? 3;
+
+  const showRotate = opts.rotate ?? true;
+
+  const grid = el('div', { className: 'vl-dpad' }, [
+    ...(showRotate
+      ? [
+          padBtn('vl-dpad-rotl vl-dpad-btn--rot', ICONS.rotateLeft, 'Rotate left', () =>
+            opts.onRotate?.(step),
+          ),
+        ]
+      : []),
+    padBtn('vl-dpad-up', ICONS.arrowUp, 'Move up', () => opts.onMove?.('up')),
+    ...(showRotate
+      ? [
+          padBtn('vl-dpad-rotr vl-dpad-btn--rot', ICONS.rotateRight, 'Rotate right', () =>
+            opts.onRotate?.(-step),
+          ),
+        ]
+      : []),
+    padBtn('vl-dpad-left', ICONS.arrowLeft, 'Move left', () => opts.onMove?.('left')),
+    padBtn('vl-dpad-center vl-dpad-btn--center', ICONS.target, 'Reset to center', () =>
+      opts.onReset?.(),
+    ),
+    padBtn('vl-dpad-right', ICONS.arrowRight, 'Move right', () => opts.onMove?.('right')),
+    padBtn('vl-dpad-down', ICONS.arrowDown, 'Move down', () => opts.onMove?.('down')),
+  ]);
+
+  const root = el('div');
+  root.append(grid);
+
+  let readout: HTMLElement | null = null;
+  const ensureReadout = () => {
+    if (!readout) {
+      readout = el('div', { className: 'vl-dpad-readout', attrs: { 'aria-live': 'polite' } });
+      root.append(readout);
+    }
+    return readout;
+  };
+  if (opts.readout !== undefined) ensureReadout().textContent = opts.readout;
+
+  return {
+    root,
+    setReadout(text: string) {
+      ensureReadout().textContent = text;
+    },
+  };
+}
