@@ -2119,17 +2119,7 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
 
   // ---- License reminders on download ----
   // In-memory only (resets on refresh) so the big modal reappears for new sessions.
-  let downloadCount = 0;
 
-  // The kit's pair, not a local copy of it. The two functions that used to live here were
-  // a re-derivation of `openLicenseModal` / `licenseReminderToast` that had drifted in three
-  // ways that matter: they hardcoded a creativecommons.org URL (invariant #4), they had no
-  // `isDesktop()` guard so they popped over a host that has already sold the user a licence
-  // (invariant #7), and they were missing the focus handling and `role="dialog"` the kit
-  // grew later. Seven apps call the kit pair; this was the eighth going its own way, and it
-  // is the highest-traffic one.
-  const showLicenseModal = () => { openLicenseModal(); };
-  const showLicenseToast = () => { licenseReminderToast(); };
 
   // ---- Render / project save-load / AI prompt ----
   function downloadBlob(blob: Blob, fileName: string) {
