@@ -1288,7 +1288,6 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
     topbarLinks({
       appTitle: 'AI3DLabs',
       githubUrl: BRAND.urls.github,
-      boostUrl: BRAND.urls.makerworld,
       themeToggle: true,
       themeStorageKey: 'name-keychain-theme'
     }),

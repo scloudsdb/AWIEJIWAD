@@ -22,7 +22,7 @@ import '@AI3DLabs/ui-kit/styles.css';
 import '@AI3DLabs/plates/plates.css';
 import {
   topbarLinks, isDesktop, promptDialog, hostAssetUrl, rememberFile, bindExternalLinks,
-  chooseFile, listRow, openLicenseModal, licenseReminderToast,
+  chooseFile, listRow,
 } from '@AI3DLabs/ui-kit';
 import './style.css';
 import { createStore } from './store/store';

@@ -1,5 +1,6 @@
 import { BRAND } from '@AI3DLabs/brand';
 import { el, button, openCommercialModal, ICONS, svgEl } from '@AI3DLabs/ui-kit';
+import '@AI3DLabs/ui-kit/styles.css';
 import registryData from '../../../generators.json';
 import './hub.css';
 
