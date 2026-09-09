@@ -55,11 +55,10 @@ export function topbarLinks(opts: TopbarLinksOptions = {}): HTMLElement {
   // The host app owns its own chrome; a second nav bar inside it is noise.
   if (isDesktop()) return renderNothing();
   const rightGroup = el('div', { className: 'vl-topbar-group' }, [
-    actionBtn('license', ICONS.license, 'Get the commercial license', () => openCommercialModal()),
-    linkBtn('mw', ICONS.zap, 'Support me', opts.donateUrl ?? BRAND.urls.donate),
+    linkBtn('license', ICONS.license, 'Commercial License', 'https://www.patreon.com/16745258/join'),
   ]);
 
-  if (opts.themeToggle) {
+  if (opts.themeToggle !== false) {
     rightGroup.append(themeToggleButton({
       storageKey: opts.themeStorageKey ?? 'vl-theme',
       className: 'vl-topbar-btn vl-topbar-btn--theme',

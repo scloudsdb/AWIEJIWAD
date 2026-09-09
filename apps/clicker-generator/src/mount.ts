@@ -673,21 +673,16 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
         // for you to go and find, it lands in the library and shows up in the grid.
         try {
           const { indexed } = await host.exportToLibrary(
-            { name: 'clicker.3mf', bytes: buildThreeMF(latestParts) },
+            { name: 'ai3dlabs-clicker.3mf', bytes: buildThreeMF(latestParts) },
             { designer: 'Clicker Generator' },
           );
-          store.set({ status: indexed ? 'Exported to your library ✓' : 'Exported as clicker.3mf ✓' });
+          store.set({ status: indexed ? 'Exported to your library ✅' : 'Exported as ai3dlabs-clicker.3mf ✅' });
         } catch (err) {
           store.set({ status: 'Export failed: ' + String(err) });
         }
       } else {
-        // Standalone / public path: direct browser download + license reminder.
-        downloadThreeMF(latestParts, 'clicker.3mf');
-        // First download of the session → big license modal; later ones → quiet corner toast.
-        // The counter is in-memory, so a page refresh re-shows the big modal on the next download.
-        downloadCount += 1;
-        if (downloadCount === 1) showLicenseModal();
-        else showLicenseToast();
+        // Standalone / public path: direct browser download.
+        downloadThreeMF(latestParts, 'ai3dlabs-clicker.3mf');
       }
     },
     onRenderPng: async () => {
@@ -1425,7 +1420,7 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
             building: false,
             status: msg.warnings?.[0] ?? 'Fit test exported.',
           });
-          downloadThreeMF(msg.parts, 'clicker-fit-test.3mf');
+          downloadThreeMF(msg.parts, 'ai3dlabs-fit-test.3mf');
           break;
         }
         latestParts = msg.parts;
@@ -2253,7 +2248,7 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
     const proj = buildProject();
     if (host) { void saveToHost(proj); return; }
 
-    downloadBlob(new Blob([JSON.stringify(proj)], { type: 'application/json' }), 'clicker-project.json');
+    downloadBlob(new Blob([JSON.stringify(proj)], { type: 'application/json' }), 'ai3dlabs-project.json');
     store.set({ status: 'Project saved ✓' });
   }
 
