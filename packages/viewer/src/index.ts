@@ -438,8 +438,10 @@ export function createViewer(container: HTMLElement, opts: ViewerOptions = {}): 
   };
   const onPointerUp = (e: PointerEvent) => {
     // Ignore the pointerup that ends an orbit drag or a long press.
-    if (Math.hypot(e.clientX - downX, e.clientY - downY) > 5) return;
-    if (performance.now() - downT > 500) return;
+    // Right clicks often involve slightly more movement on trackpads.
+    if (Math.hypot(e.clientX - downX, e.clientY - downY) > 10) return;
+    // Allow up to 1000ms for right clicks / long presses on trackpads
+    if (performance.now() - downT > 1000) return;
     selectedIndex = pickIndexAt(e.clientX, e.clientY);
     applyHighlight();
     pickCb?.(selectedIndex, e);
@@ -448,7 +450,15 @@ export function createViewer(container: HTMLElement, opts: ViewerOptions = {}): 
   renderer.domElement.addEventListener('pointerleave', onPointerLeave);
   renderer.domElement.addEventListener('pointerdown', onPointerDown);
   renderer.domElement.addEventListener('pointerup', onPointerUp);
-
+  
+  // Prevent context menu on the ENTIRE container (not just canvas) so overlays don't trigger it
+  container.addEventListener('contextmenu', (e) => {
+    e.preventDefault(); 
+    // Ensure right-click always triggers a pick, even if pointerup was noisy
+    selectedIndex = pickIndexAt(e.clientX, e.clientY);
+    applyHighlight();
+    pickCb?.(selectedIndex, e);
+  });
   // ---- sizing ----
   function onResize() {
     const w = container.clientWidth;
