@@ -12,6 +12,9 @@ execSync('pnpm build:clicker', { stdio: 'inherit' });
 console.log('Building Name Keychain Generator...');
 execSync('pnpm build:keychain', { stdio: 'inherit' });
 
+console.log('Building Cardless Generator...');
+execSync('pnpm build:cardless', { stdio: 'inherit' });
+
 const distPath = path.resolve('final-dist');
 if (fs.existsSync(distPath)) {
   fs.rmSync(distPath, { recursive: true, force: true });
@@ -25,6 +28,9 @@ fs.cpSync('apps/clicker-generator/dist', path.join(distPath, 'Clicker-Generator'
 
 fs.mkdirSync(path.join(distPath, 'name-keychain'), { recursive: true });
 fs.cpSync('apps/name-keychain/dist', path.join(distPath, 'name-keychain'), { recursive: true });
+
+fs.mkdirSync(path.join(distPath, 'cardless'), { recursive: true });
+fs.cpSync('apps/cardless/dist', path.join(distPath, 'cardless'), { recursive: true });
 
 // Copy CNAME
 fs.writeFileSync(path.join(distPath, 'CNAME'), 'ai3dlabs.site');
