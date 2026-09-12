@@ -61,6 +61,7 @@ export interface UiState {
   capWidthMm: number;
   topThickness: number;
   imageDepth: number;
+  flushLogo: boolean;
   /** How far the cap stands proud of the body border at rest, mm. */
   capProud: number;
   /** Hollow the body's underside instead of printing it solid. */
@@ -194,6 +195,7 @@ export interface UiCallbacks {
   onWidth(mm: number): void;
   onTopThickness(mm: number): void;
   onImageDepth(mm: number): void;
+  onFlushLogo(on: boolean): void;
   /** Button height above the bezel at rest, mm. */
   onCapProud(mm: number): void;
   /** Hollow the body's underside. */
@@ -550,6 +552,7 @@ export function createUi(
         <div class="vl-section__body">
           <div class="prow-stacked"><div id="topthickMount"></div></div>
           <div class="prow-stacked"><div id="imgdepthMount"></div></div>
+          <div class="prow-stacked" style="margin-top: 12px; margin-bottom: 8px;"><div id="flushMount"></div></div>
           <div class="prow-stacked"><div id="gapTolMount"></div></div>
         </div>
       </details>
@@ -1757,6 +1760,14 @@ export function createUi(
   });
   $('imgdepthMount').append(imgdepthRow);
 
+  const flushRow = toggleRow({
+    label: 'Flush design (color only)',
+    help: 'Embeds the image flat into the lid so it is not embossed.',
+    value: initial.flushLogo,
+    onInput: (v) => cb.onFlushLogo(v),
+  });
+  $('flushMount').append(flushRow);
+
   const gapTolRow = stepperRow({
     label: 'Snap-fit gap',
     help: 'Clearance between the lid and the shell clips. Press + if the lid is hard to close, − if it feels loose. 0 = the default fit.',
@@ -2287,6 +2298,8 @@ export function createUi(
     widthRow.setValue(state.capWidthMm);
     topthickRow.setValue(state.topThickness);
     imgdepthRow.setValue(state.imageDepth);
+    imgdepthRow.style.display = state.flushLogo ? 'none' : '';
+    flushRow.setValue(state.flushLogo);
     lastBuiltBody = state.builtBodyMm;
     designScaleRow.setValue(Math.round((state.designScale ?? 1) * 100));
     // An outline base ignores it, so the control must not sit there looking live. In Text

@@ -144,9 +144,10 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
     colorCount: 4,
     palette: [],
     baseShape: 'outline',
-    capWidthMm: 35,
+    capWidthMm: 50,
     topThickness: 1.5,
     imageDepth: 0.8,
+    flushLogo: false,
     capProud: 4.0,
     hollowBase: false,
     fixedSize: null,
@@ -387,6 +388,10 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
     },
     onImageDepth: (mm) => {
       store.set({ imageDepth: mm });
+      debouncedRebuild();
+    },
+    onFlushLogo: (on) => {
+      store.set({ flushLogo: on });
       debouncedRebuild();
     },
     onFitTest: () => {
@@ -973,7 +978,7 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
   const HISTORY_FIELDS = [
     'palette', 'paletteOverrides', 'partOverrides', 'customColors', 'bodyColorRgb', 'baseColorOverride',
     'componentHeights', 'edgeSettings', 'extrudeChamfer', 'baseShape', 'capWidthMm', 'topThickness',
-    'imageDepth', 'capProud', 'hollowBase', 'fixedSize', 'designScale', 'shapeSides', 'shapeCornerPct',
+    'imageDepth', 'flushLogo', 'capProud', 'hollowBase', 'fixedSize', 'designScale', 'shapeSides', 'shapeCornerPct',
     'shapeArmPct', 'tolerance',
     /* Which custom outline, as well as THAT it is custom.
        `baseShape` alone was never enough: restoring 'custom' without also restoring the token
@@ -1811,6 +1816,7 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
         : s.capWidthMm,
       topThickness: Math.max(1, s.topThickness),
       imageDepth: s.imageDepth,
+      flushLogo: s.flushLogo,
       imageMargin: isText ? 2.5 : 1.2,
       borderWidth: isText ? 3.5 : 2.6,
       capProud: s.capProud,
@@ -2017,6 +2023,7 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
         capWidthMm: s.capWidthMm,
         topThickness: s.topThickness,
         imageDepth: s.imageDepth,
+        flushLogo: s.flushLogo,
         capProud: s.capProud,
         hollowBase: s.hollowBase,
         fixedSize: s.fixedSize,
@@ -2231,6 +2238,7 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
         capWidthMm: set.capWidthMm ?? store.get().capWidthMm,
         topThickness: set.topThickness ?? store.get().topThickness,
         imageDepth: set.imageDepth ?? store.get().imageDepth,
+        flushLogo: set.flushLogo ?? false,
         capProud: set.capProud ?? 4.0,
         hollowBase: set.hollowBase ?? false,
         // Absent in every project saved before this control existed, and absent MEANS off —

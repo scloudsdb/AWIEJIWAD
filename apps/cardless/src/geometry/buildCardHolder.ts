@@ -236,14 +236,30 @@ export function buildCardHolder(
       logoCY = (bb.min[1] + bb.max[1]) / 2;
     }
 
+    let allLogos: Solid | null = null;
+    const isFlush = !!params.flushLogo;
+    // For a flush logo, we extrude it by the top lip thickness and push it down into the lid.
+    const flushDepth = lipT;
+
     for (let i = 0; i < regions.length; i++) {
       const r = regions[i];
       if (!r.rings || r.rings.length === 0 || r.rings[0].length === 0) continue;
       let rCS = keep(new CrossSection(r.rings, 'NonZero'));
       rCS = keep(rCS.translate([-logoCX, -logoCY]));
       rCS = keep(rCS.scale([actualLogoScale, actualLogoScale]));
-      const rSol  = keep(rCS.extrude(embossH));
-      const placed = keep(rSol.translate([0, 0, 0])); // Extrudes up from Z=0
+      
+      let placed: Solid;
+      if (isFlush) {
+        const rSol = keep(rCS.extrude(flushDepth));
+        placed = keep(rSol.translate([0, 0, -flushDepth]));
+        allLogos = allLogos ? keep(allLogos.add(placed)) : placed;
+      } else {
+        const rSol = keep(rCS.extrude(embossH));
+        // Push it slightly into the lid by 0.1mm so it fuses perfectly with the lid surface in slicers
+        placed = keep(rSol.translate([0, 0, -0.1])); 
+        allLogos = allLogos ? keep(allLogos.add(placed)) : placed;
+      }
+
       finalParts.push({
         name: `top-color-${i}-0`,
         ...getMeshData(placed),
@@ -252,6 +268,11 @@ export function buildCardHolder(
         group: 'top',
         numProp: 3,
       });
+    }
+
+    if (allLogos) {
+      // Cut the logo out of the lid so they fit perfectly
+      lidSol = keep(lidSol.subtract(allLogos));
     }
 
     // Renamed parts so mount.ts color picker works ('base-body' and 'top-base')

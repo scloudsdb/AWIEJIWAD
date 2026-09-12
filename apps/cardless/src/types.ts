@@ -137,6 +137,7 @@ export interface BuildParams {
   capWidthMm: number; // the cap (top) footprint; body = cap + tolerance + border
   topThickness: number; // solid base-color backing behind the image (min 1–2 mm)
   imageDepth: number; // how deep the colored image cuts in from the top
+  flushLogo?: boolean; // if true, logo is embedded flush with the surface instead of embossed
   imageMargin: number; // flat base-color frame between the image and the cap edge
   borderWidth: number; // raised body border around the cap (the bezel wall)
   capProud: number; // how far the cap top sticks up above the body border at rest (≈ travel → flush when pressed)
