@@ -1760,11 +1760,11 @@ export function createUi(
   });
   $('imgdepthMount').append(imgdepthRow);
 
-  const flushRow = toggleRow({
+  const flushRow = toggleSwitch({
     label: 'Flush design (color only)',
     help: 'Embeds the image flat into the lid so it is not embossed.',
-    value: initial.flushLogo,
-    onInput: (v) => cb.onFlushLogo(v),
+    checked: initial.flushLogo,
+    onChange: (v) => cb.onFlushLogo(v),
   });
   $('flushMount').append(flushRow);
 
