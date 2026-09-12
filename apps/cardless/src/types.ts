@@ -18,6 +18,14 @@ export const FILAMENTS: [string, string][] = [
   ['Pink', '#e6398b'],
   ['Brown', '#7a5230'],
   ['Beige', '#d9c8a9'],
+  ['eSUN PLA+ Magenta', '#DA3B6C'],
+  ['SUNLU PLA+ Grey 2.0', '#75787B'],
+  ['eSUN PLA+ Haze Blue', '#3B6FA0'],
+  ['eSUN PLA+ Aqua', '#00B5AC'],
+  ['eSUN PLA+ Jade Green', '#02C5A7'],
+  ['SUNLU PLA+ Lavender Purple', '#685BC7'],
+  ['SUNLU PLA+ Olive Green', '#50533C'],
+  ['SUNLU PLA+ Roasted Chestnut', '#3C3027'],
 ];
 
 /** A closed 2D ring (list of [x,y]); EvenOdd fill handles outer/hole nesting. */
