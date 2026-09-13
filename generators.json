@@ -25,14 +25,6 @@
       "status": "live",
       "appUrl": "/cardless/",
       "blurb": "A cardless keychain designed perfectly to hold your Flazz, e-Money, or any standard CR80 card."
-    },
-    {
-      "id": "logo-keychain",
-      "name": "Logo Keychain",
-      "route": "app",
-      "status": "live",
-      "appUrl": "/logo-keychain/",
-      "blurb": "Turn any image or logo into a customized keychain emblem."
     }
   ],
   "sellerTools": []
