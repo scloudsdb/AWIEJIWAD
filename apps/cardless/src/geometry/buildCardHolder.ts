@@ -293,7 +293,7 @@ export function buildCardHolder(
       });
 
       if (params.backLogo) {
-        let placedBack = keep(placed.scale([-1, 1, 1]).translate([0, 0, -trayH]));
+        let placedBack = keep(placed.rotate([0, 180, 0]).translate([0, 0, -trayH]));
         finalParts.push({
           name: `base-color-${i}-0`,
           ...getMeshData(placedBack),
@@ -310,7 +310,7 @@ export function buildCardHolder(
       lidSol = keep(lidSol.subtract(allLogos));
       if (params.backLogo) {
         // Mirror along Y so it appears correct when flipped over horizontally
-        let backLogo = keep(allLogos.scale([-1, 1, 1]));
+        let backLogo = keep(allLogos.rotate([0, 180, 0]));
         // Translate to the bottom of the base
         backLogo = keep(backLogo.translate([0, 0, -trayH]));
         backShellSol = keep(backShellSol.subtract(backLogo));

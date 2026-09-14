@@ -1271,9 +1271,25 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
       syncBaseColor(); // the cap frame mirrors the dominant region, keep it in step
     } else if (target.kind === 'part') {
       // One part only. Recorded in partOverrides so it survives the next rebuild.
-      viewer.setPartColor(partIndex, rgb);
-      if (latestParts[partIndex]) latestParts[partIndex] = { ...latestParts[partIndex], colorRgb: rgb };
-      store.set({ partOverrides: { ...(s.partOverrides ?? {}), [target.name]: rgb } });
+      const overrides = { ...(s.partOverrides ?? {}), [target.name]: rgb };
+      
+      let mirrorName: string | null = null;
+      if (target.name.startsWith('top-color-')) {
+         mirrorName = target.name.replace('top-color-', 'base-color-');
+      } else if (target.name.startsWith('base-color-')) {
+         mirrorName = target.name.replace('base-color-', 'top-color-');
+      }
+      if (mirrorName) {
+         overrides[mirrorName] = rgb;
+      }
+
+      latestParts.forEach((p, idx) => {
+         if (p.name === target.name || p.name === mirrorName) {
+            viewer.setPartColor(idx, rgb);
+            latestParts[idx] = { ...latestParts[idx], colorRgb: rgb };
+         }
+      });
+      store.set({ partOverrides: overrides });
     } else {
       // Body / cap colours are model-wide. A block chain has one mesh per block and one per
       // cap, so repaint every member of the group — not just the one that was clicked.
