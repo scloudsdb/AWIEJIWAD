@@ -149,7 +149,7 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
     imageDepth: 0.8,
     flushLogo: false,
     capProud: 4.0,
-    hollowBase: false,
+    hollowBase: false, standUpPreview: false, backLogo: false,
     fixedSize: null,
     designScale: 1,
     shapeSides: 6,
@@ -427,7 +427,7 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
         colorRgb: st.baseColorOverride ?? deriveFrameColor(st),
       });
     },
-    onHollowBase: (on) => {
+    onStandUpPreview: (on) => { store.set({ standUpPreview: on }); debouncedRebuild(); }, onBackLogo: (on) => { store.set({ backLogo: on }); debouncedRebuild(); }, onHollowBase: (on) => {
       store.set({ hollowBase: on });
       debouncedRebuild();
     },
