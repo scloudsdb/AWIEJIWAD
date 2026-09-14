@@ -284,7 +284,7 @@ export function buildCardHolder(
       }
 
       finalParts.push({
-        name: `top-color-${i}-0`,
+        name: r.partName || `top-color-${i}-0`,
         ...getMeshData(placed),
         colorRgb: r.filamentRgb || [255, 255, 255],
         kind: 'cap',
@@ -295,9 +295,9 @@ export function buildCardHolder(
       if (params.backLogo) {
         let placedBack = keep(placed.rotate([0, 180, 0]).translate([0, 0, -trayH]));
         finalParts.push({
-          name: `base-color-${i}-0`,
+          name: (r.partName || `top-color-${i}-0`).replace('top-', 'base-'),
           ...getMeshData(placedBack),
-          colorRgb: params.partOverrides?.[`base-color-${i}-0`] || r.filamentRgb || [255, 255, 255],
+          colorRgb: params.partOverrides?.[(r.partName || `top-color-${i}-0`).replace('top-', 'base-')] || r.filamentRgb || [255, 255, 255],
           kind: 'body',
           group: 'base',
           numProp: 3,
