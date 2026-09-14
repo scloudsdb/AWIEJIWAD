@@ -1834,6 +1834,8 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
         ? ringsForState(s) ?? undefined
         : undefined,
       tolerance: s.tolerance,
+        standUpPreview: s.standUpPreview,
+        backLogo: s.backLogo,
       stemFitPct: s.stemFitPct,
       socketFitPct: s.socketFitPct,
       imageOffset: s.imageOffset,

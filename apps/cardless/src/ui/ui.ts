@@ -46,6 +46,8 @@ import { openShapePicker } from './shapePicker';
 
 
 export interface UiState {
+  standUpPreview: boolean;
+  backLogo: boolean;
   status: string;
   building: boolean;
   hasParts: boolean;
@@ -175,6 +177,8 @@ export interface UiState {
 }
 
 export interface UiCallbacks {
+  onStandUpPreview(v: boolean): void;
+  onBackLogo(v: boolean): void;
   onUpload(file: File): void;
   /** `label` is the sample or pack design's own name (`s.name` / `design.name`) — the only way
    *  `mount.ts` can put a real name in the "Sample: X" status without reference-matching a
@@ -514,7 +518,7 @@ export function createUi(
         <div id="shapeSelectField">
           <div id="shapePickMount"></div>
         </div>
-        <div id="widthMount"></div>
+        <div id="standUpMount" style="margin-bottom: 8px;"></div><div id="widthMount"></div>
         <div id="designScaleMount"></div>
         <div id="fixedSizeMount"></div>
         <div id="fixedSizeFields">
@@ -551,7 +555,7 @@ export function createUi(
         <summary>Case &amp; fit</summary>
         <div class="vl-section__body">
           <div class="prow-stacked"><div id="topthickMount"></div></div>
-          <div class="prow-stacked"><div id="imgdepthMount"></div></div>
+          <div class="prow-stacked"><div id="imgdepthMount"></div></div><div class="prow-stacked" style="margin-top: 8px;"><div id="backLogoMount"></div></div>
           <div class="prow-stacked" style="margin-top: 12px; margin-bottom: 8px;"><div id="flushMount"></div></div>
           <div class="prow-stacked"><div id="gapTolMount"></div></div>
         </div>
@@ -1566,6 +1570,22 @@ export function createUi(
     });
   }
 
+  
+  const standUpToggle = toggleSwitch({
+    label: 'Stand Up Preview',
+    checked: initial.standUpPreview,
+    onChange: (v) => cb.onStandUpPreview(v),
+  });
+  $('standUpMount').append(standUpToggle);
+  
+  const backLogoToggle = toggleSwitch({
+    label: 'Logo on Back',
+    help: 'Adds the same image/emboss to the back cover.',
+    checked: initial.backLogo,
+    onChange: (v) => cb.onBackLogo(v),
+  });
+  $('backLogoMount').append(backLogoToggle);
+
   // --- Import mode tabs ---
   // Was five hand-built `<button class="import-card" data-mode="…">` cards with a delegated
   // `[data-mode]` click listener, plus a matching sync loop below that toggled `.active` by
@@ -2322,6 +2342,10 @@ export function createUi(
     removeBgSvgToggle.setValue(state.removeBg);
 
     // Update Import Mode tabs and panels
+    
+    standUpToggle.setValue(state.standUpPreview);
+    backLogoToggle.setValue(state.backLogo);
+
     importTabsCtl.setValue(state.importMode);
     $('imagePanel').hidden = state.importMode !== 'image';
     $('svgPanel').hidden = state.importMode !== 'svg';
