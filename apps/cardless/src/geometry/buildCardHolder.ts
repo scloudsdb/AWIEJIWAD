@@ -297,7 +297,7 @@ export function buildCardHolder(
         finalParts.push({
           name: `base-color-${i}-0`,
           ...getMeshData(placedBack),
-          colorRgb: r.filamentRgb || [255, 255, 255],
+          colorRgb: params.partOverrides?.[`base-color-${i}-0`] || r.filamentRgb || [255, 255, 255],
           kind: 'body',
           group: 'base',
           numProp: 3,

@@ -1207,13 +1207,13 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
     // A click in the viewport means THIS shape — one key, one letter, one island — in
     // every mode, not just blocks. Both the click and the palette row used to funnel
     // into the whole colour bucket, which left no way to recolour a single component.
-    if (/^top-color-\d+-\d+$/.test(name)) return { kind: 'part', name };
+    if (/^(top|base)-color-\d+-\d+$/.test(name)) return { kind: 'part', name };
     // Fallback for a region carrying no component index. The bucket-wide path is what
     // the left-hand palette rows use; they call applyModelRecolor directly.
-    const m = /^top-color-(\d+)(?:-(\d+))?$/.exec(name);
-    if (m) {
-      return { kind: 'region', index: +m[1], compIndex: m[2] ? +m[2] : 0 };
-    }
+    const m = /^(top|base)-color-(\d+)(?:-(\d+))?$/.exec(name);
+      if (m) {
+        return { kind: 'region', index: +m[2], compIndex: m[3] ? +m[3] : 0 };
+      }
     return null;
   }
 
@@ -1247,9 +1247,10 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
       // single "Letters" row governing the lot, so there the bucket is every legend.
       const blocks = s.importMode === 'blocks';
       const prefix = `top-color-${i}-`;
-      const isTarget = blocks
-        ? (n: string) => /^top-color-\d+-\d+$/.test(n)
-        : (n: string) => n.startsWith(prefix);
+        const basePrefix = `base-color-${i}-`;
+        const isTarget = blocks
+          ? (n: string) => /^(top|base)-color-\d+-\d+$/.test(n)
+          : (n: string) => n.startsWith(prefix) || n.startsWith(basePrefix);
       // The row governs its bucket, so it also RESETS the shapes in that bucket the user
       // recoloured one by one — otherwise the swatch would change and half the model
       // would not follow. The colour survives the next rebuild through `palette` /
