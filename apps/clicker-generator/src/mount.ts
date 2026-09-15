@@ -1221,10 +1221,16 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
      it on the wheel again by eye. Shelf colours are already swatches, so only off-shelf ones
      are recorded, once each. */
   function rememberColour(rgb: RGB) {
-    const same = (a: RGB, b: RGB) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
-    if (FILAMENTS.some(([, hex]) => same(hexToRgb(hex), rgb))) return;
     const s = store.get();
+    const same = (a: RGB, b: RGB) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
+    
+    const shelf = s.colorMode === 'limited' && s.limitedColors.length > 0
+        ? s.limitedColors
+        : FILAMENTS.map(([, hex]) => hexToRgb(hex));
+        
+    if (shelf.some((o) => same(o, rgb))) return;
     if (s.customColors.some((c) => same(c, rgb))) return;
+    
     store.set({ customColors: [...s.customColors, rgb] });
   }
 
