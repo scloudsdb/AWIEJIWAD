@@ -141,6 +141,7 @@ export const DEFAULT_PREPROCESS: PreprocessParams = {
  *  Design: the BODY is a solid block with a recessed well + raised border cut
  *  into the top; the cap nests INSIDE that well (button-in-bezel). */
 export interface BuildParams {
+  noSwitch?: boolean;
   baseShape: BaseShapeKind;
   capWidthMm: number; // the cap (top) footprint; body = cap + tolerance + border
   topThickness: number; // solid base-color backing behind the image (min 1–2 mm)

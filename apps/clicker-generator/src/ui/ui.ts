@@ -64,6 +64,7 @@ export interface UiState {
   imageDepth: number;
   /** How far the cap stands proud of the body border at rest, mm. */
   capProud: number;
+    noSwitch: boolean;
   /** Hollow the body's underside instead of printing it solid. */
   hollowBase: boolean;
   /** Lock the finished base to this outer size (mm), fitting the design inside it. Null =
@@ -197,6 +198,7 @@ export interface UiCallbacks {
   onImageDepth(mm: number): void;
   /** Button height above the bezel at rest, mm. */
   onCapProud(mm: number): void;
+    onNoSwitch(on: boolean): void;
   /** Hollow the body's underside. */
   onHollowBase(on: boolean): void;
   /** Lock the base to a size, or let it follow the design again (null). */
@@ -1856,7 +1858,15 @@ export function createUi(
 
   // Free, and off by default. Off because it changes what an existing saved design renders
   // as, and because the wall thickness wants a real print before anyone's default moves.
-  const hollowToggle = toggleSwitch({
+  const nametagToggle = toggleSwitch({
+      label: 'Photo Nametag (No Switch)',
+      help: 'Prints a solid keychain without the mechanical switch hole.',
+      checked: initial.noSwitch,
+      onChange: (v) => cb.onNoSwitch(v),
+    });
+    const hm = document.getElementById('hollowMount'); if (hm && hm.parentElement) hm.parentElement.insertBefore(nametagToggle, hm);
+
+    const hollowToggle = toggleSwitch({
     label: 'Hollow the base',
     help: 'Prints the base as a shell instead of a solid block, which saves a lot of filament on bigger clickers. The switch column and its surround stay solid. Off by default.',
     checked: initial.hollowBase,
@@ -2444,6 +2454,24 @@ export function createUi(
     imgdepthRow.setValue(state.imageDepth);
     capProudRow.setValue(RIM_SPAN - state.capProud);
     hollowToggle.setValue(state.hollowBase);
+      nametagToggle.setValue(state.noSwitch);
+      
+      // Hide irrelevant settings if noSwitch is active
+      if (state.noSwitch) {
+        hollowToggle.hidden = true;
+        capProudRow.hidden = true;
+        gapTolRow.hidden = true;
+        stemFitRow.hidden = true;
+        socketFitRow.hidden = true;
+        
+      } else {
+        hollowToggle.hidden = false;
+        capProudRow.hidden = false;
+        gapTolRow.hidden = false;
+        stemFitRow.hidden = false;
+        socketFitRow.hidden = false;
+        
+      }
     lastBuiltBody = state.builtBodyMm;
     designScaleRow.setValue(Math.round((state.designScale ?? 1) * 100));
     // An outline base ignores it, so the control must not sit there looking live. In Text

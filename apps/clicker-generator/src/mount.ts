@@ -169,6 +169,7 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
     imageDepth: 0.8,
     capProud: 4.0,
     hollowBase: false,
+      noSwitch: false,
     fixedSize: null,
     designScale: 1,
     shapeSides: 6,
@@ -442,6 +443,7 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
         colorRgb: st.baseColorOverride ?? deriveFrameColor(st),
       });
     },
+    onNoSwitch: (on) => { store.set({ noSwitch: on }); debouncedRebuild(); },
     onHollowBase: (on) => {
       store.set({ hollowBase: on });
       debouncedRebuild();
@@ -1977,6 +1979,7 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
       borderWidth: isText ? 3.5 : 2.6,
       capProud: s.capProud,
       hollowBase: s.hollowBase,
+      noSwitch: s.noSwitch,
       // Null, not `{w:0,h:0}` — buildClicker treats any absent/degenerate size as "follow the
       // design", and the whole point of the control is that it is off until asked for.
       bodySize: s.fixedSize ?? undefined,

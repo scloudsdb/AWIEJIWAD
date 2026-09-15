@@ -750,7 +750,7 @@ export function buildClicker(
   const clampX = (v: number) => clampAxis(v, loX, hiX);
   const clampY = (v: number) => clampAxis(v, loY, hiY);
 
-  const requested = (params.switches?.length ? params.switches : [{ x: 0, y: 0, rotation: 0 }]).slice(0, 3);
+  const requested = params.noSwitch ? [] : (params.switches?.length ? params.switches : [{ x: 0, y: 0, rotation: 0 }]).slice(0, 3);
   const applied: SwitchPlacement[] = requested.map((sw) => ({
     x: clampX(sw.x ?? 0),
     y: clampY(sw.y ?? 0),
@@ -921,7 +921,7 @@ export function buildClicker(
   const bodyBottomZ = socketBB.min[2] - params.floorThickness;
   const maxProud = Math.max(0.4, slabTopZ - cavityFloorZ - 1.0); // leave ≥1 mm of border
   const capProud = Math.max(0.4, Math.min(params.capProud, maxProud));
-  const bodyTopZ = slabTopZ - capProud;
+  const bodyTopZ = params.noSwitch ? slabTopZ : slabTopZ - capProud;
   const wellFloorZ = Math.min(cavityFloorZ, slabBottomZ - travel);
 
   // Cap skirt: a thin wall hanging from the cap perimeter down into the well.
@@ -1215,7 +1215,7 @@ export function buildClicker(
   }
 
   // Subtract the well and every socket afterwards to ensure the interior cavity is clean
-  body = track(body.subtract(well));
+  if (!params.noSwitch) body = track(body.subtract(well));
   for (const sk of socketAts) body = track(body.subtract(sk));
 
   /* Hollow the underside.
@@ -1259,7 +1259,7 @@ export function buildClicker(
 
      Done BEFORE the void loops so their buried test sees the final shape: a cavity that would
      swallow a void makes the counter report it instead of erasing it silently. */
-  if (params.hollowBase) {
+  if (params.hollowBase && !params.noSwitch) {
     // 1.6 mm of wall and floor. CLAUDE.md's printability numbers put the minimum at 1.2 mm and
     // 1.5 mm for parts that get handled; a clicker is handled constantly, so this is the floor
     // of the range and not the middle of it.
