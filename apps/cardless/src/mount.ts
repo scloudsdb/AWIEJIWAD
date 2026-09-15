@@ -1166,15 +1166,16 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
       if (!part) return;
       const target = partColorTarget(part.name);
       if (!target) return;
-      const offered: RGB[] =
-        s.colorMode === 'limited' && s.limitedColors.length > 0
-          ? s.limitedColors
-          : FILAMENTS.map(([, hex]) => hexToRgb(hex));
       const sameRgb = (a: RGB, b: RGB) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
-      const options: RGB[] = [
-        ...s.customColors.filter((c) => !offered.some((o) => sameRgb(o, c))),
-        ...offered,
-      ];
+        const baseFilaments = FILAMENTS.map(([, hex]) => hexToRgb(hex));
+        const imageColors = s.colorMode === 'limited' && s.limitedColors.length > 0 ? s.limitedColors : [];
+        const options: RGB[] = [...imageColors];
+        s.customColors.forEach(c => {
+          if (!options.some(o => sameRgb(o, c))) options.push(c);
+        });
+        baseFilaments.forEach(c => {
+          if (!options.some(o => sameRgb(o, c))) options.push(c);
+        });
       ui.showColorPopoverAt(clientX, clientY, rgbToHex(part.colorRgb), options, {
         onSelect: (hex) => applyModelRecolor(target, hexToRgb(hex), index),
         onClose: () => store.set({ selectedParts: [] }),

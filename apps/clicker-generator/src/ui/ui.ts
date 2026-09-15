@@ -2244,17 +2244,28 @@ export function createUi(
    *  a clicked part; computing it the same way here is what keeps the two entry points
    *  offering one identical list instead of two that can quietly drift apart. */
   function colorOptionsFor(
-    colorMode: 'normal' | 'limited' | undefined,
-    limitedColors: RGB[] | undefined,
-    customColors: RGB[],
-  ): RGB[] {
-    const shelf: RGB[] =
-      colorMode === 'limited' && limitedColors && limitedColors.length > 0
-        ? limitedColors
-        : FILAMENTS.map(([, hex]) => hexRgb(hex));
-    const sameRgb = (a: RGB, b: RGB) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
-    return [...customColors.filter((c) => !shelf.some((o) => sameRgb(o, c))), ...shelf];
-  }
+      colorMode: 'normal' | 'limited' | undefined,
+      limitedColors: RGB[] | undefined,
+      customColors: RGB[],
+    ): RGB[] {
+      const sameRgb = (a: RGB, b: RGB) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
+      const baseFilaments = FILAMENTS.map(([, hex]) => hexRgb(hex));
+      
+      const imageColors = colorMode === 'limited' && limitedColors && limitedColors.length > 0 ? limitedColors : [];
+      
+      // Combine them: Image colors first, then custom colors, then standard filaments.
+      const combined: RGB[] = [...imageColors];
+      
+      customColors.forEach(c => {
+        if (!combined.some(o => sameRgb(o, c))) combined.push(c);
+      });
+      
+      baseFilaments.forEach(c => {
+        if (!combined.some(o => sameRgb(o, c))) combined.push(c);
+      });
+      
+      return combined;
+    }
 
   /** One compact colour row: a dot for the colour the image actually traced to (not
    *  necessarily the filament chosen to print it), the row's label, and a `colorChip()`
