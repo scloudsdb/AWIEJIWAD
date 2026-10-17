@@ -302,9 +302,9 @@ function buildPage(): string {
 
         <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--hub-card-border); border-radius: 20px; padding: 2rem; text-align: center;">
           <div style="font-size: 3.5rem; margin-bottom: 1rem;">🖨️</div>
-          <h3 style="font-size: 1.25rem; margin: 0 0 0.5rem; color: #fff;">Bambu Lab Precision</h3>
+          <h3 style="font-size: 1.25rem; margin: 0 0 0.5rem; color: #fff;">Anycubic Kobra</h3>
           <p style="color: var(--hub-text-muted); font-size: 0.9rem; margin: 0;">
-            Diproduksi menggunakan printer 3D generasi terbaru dengan multi-color printing untuk gradasi dan kombinasi warna yang tajam.
+            Diproduksi menggunakan Anycubic Kobra dengan mesin terbaru dan presisi tinggi untuk hasil cetakan yang rapi, kokoh, dan detail tajam.
           </p>
         </div>
       </div>
@@ -323,7 +323,7 @@ function buildPage(): string {
   <footer class="hub-footer">
     <div class="hub-container">
       <p style="margin: 0 0 0.5rem; font-weight: 600; color: #e2e8f0;">
-        &copy; ${new Date().getFullYear()} A&amp;I 3D Labs. All rights reserved.
+        &copy; ${new Date().getFullYear()} A&amp;I 3D Labs | All rights reserved.
       </p>
       <p style="margin: 0; color: #64748b; font-size: 0.8rem;">
         Cetak 3D Berkualitas | Indonesia
