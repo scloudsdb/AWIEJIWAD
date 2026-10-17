@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel — A&amp;I 3D Labs</title>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "firebase/app": "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js",
+      "firebase/auth": "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js",
+      "firebase/firestore": "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js"
+    }
+  }
+  </script>
+  <script type="module" crossorigin src="/admin/assets/index-BIRk6CC0.js"></script>
+  <link rel="stylesheet" crossorigin href="/admin/assets/index-4tv4SGBW.css">
+</head>
+<body>
+
+  <!-- ===== LOADING OVERLAY ===== -->
+  <div id="loading-overlay" class="loading-overlay" aria-live="polite" aria-label="Memuat...">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- ===== LOGIN VIEW ===== -->
+  <div id="login-view" class="view hidden">
+    <div class="login-bg">
+      <div class="login-card">
+        <div class="login-logo">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="40" height="40" rx="10" fill="#3b82f6"/>
+            <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="20" font-weight="bold" font-family="sans-serif">A</text>
+          </svg>
+          <span>A&amp;I 3D Labs</span>
+        </div>
+        <h1 class="login-title">Admin Panel</h1>
+        <p class="login-subtitle">Masuk untuk mengelola produk dan tools.</p>
+
+        <form id="login-form" novalidate>
+          <div class="form-group">
+            <label for="email-input">Email</label>
+            <input
+              type="email"
+              id="email-input"
+              name="email"
+              placeholder="admin@ai3dlabs.site"
+              autocomplete="email"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="password-input">Password</label>
+            <div class="password-wrapper">
+              <input
+                type="password"
+                id="password-input"
+                name="password"
+                placeholder="••••••••"
+                autocomplete="current-password"
+                required
+              />
+              <button type="button" id="toggle-password" class="toggle-password" aria-label="Tampilkan password">
+                <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg id="eye-off-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="hidden">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-check">
+            <input type="checkbox" id="remember-me" name="remember" />
+            <label for="remember-me">Ingat saya</label>
+          </div>
+
+          <div id="login-error" class="alert alert-error hidden" role="alert"></div>
+
+          <button type="submit" id="login-btn" class="btn btn-primary btn-full">
+            <span id="login-btn-text">Masuk</span>
+            <span id="login-btn-spinner" class="btn-spinner hidden"></span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DASHBOARD VIEW ===== -->
+  <div id="dashboard-view" class="view hidden">
+
+    <!-- Sidebar Overlay (mobile) -->
+    <div id="sidebar-overlay" class="sidebar-overlay hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar" aria-label="Navigasi Admin">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <svg width="32" height="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="40" height="40" rx="10" fill="#3b82f6"/>
+            <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="20" font-weight="bold" font-family="sans-serif">A</text>
+          </svg>
+          <span>A&amp;I 3D Labs</span>
+        </div>
+        <button id="sidebar-close" class="sidebar-close" aria-label="Tutup sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Menu">
+        <button class="nav-item active" data-section="produk" aria-current="page">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+          Produk
+        </button>
+        <button class="nav-item" data-section="tools">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          </svg>
+          Tools
+        </button>
+        <button class="nav-item" data-section="settings">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          Pengaturan
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="logout-btn" class="btn btn-danger btn-full">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Keluar
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-wrapper">
+      <!-- Top bar -->
+      <header class="topbar">
+        <button id="hamburger-btn" class="hamburger-btn" aria-label="Buka menu">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+        <h2 id="topbar-title" class="topbar-title">Produk</h2>
+        <div id="topbar-user" class="topbar-user"></div>
+      </header>
+
+      <main class="main-content" id="main-content">
+        <!-- ===== PRODUK SECTION ===== -->
+        <section id="section-produk" class="content-section">
+          <div class="section-header">
+            <h2>Daftar Produk</h2>
+            <button id="add-product-btn" class="btn btn-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Tambah Produk
+            </button>
+          </div>
+          <div id="products-loading" class="products-skeleton">
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+          </div>
+          <div id="products-grid" class="products-grid hidden"></div>
+          <p id="products-empty" class="empty-state hidden">Belum ada produk. Tambahkan produk pertama Anda!</p>
+        </section>
+
+        <!-- ===== TOOLS SECTION ===== -->
+        <section id="section-tools" class="content-section hidden">
+          <div class="section-header">
+            <h2>Akses Tools</h2>
+          </div>
+          <div class="tools-grid">
+            <button class="tool-access-btn tool-cg" data-url="/cg/" data-label="Clicker Generator">
+              <div class="tool-icon">🖱️</div>
+              <div class="tool-info">
+                <span class="tool-name">Clicker Generator</span>
+                <span class="tool-path">/cg/</span>
+              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="tool-arrow">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+            </button>
+            <button class="tool-access-btn tool-kc" data-url="/kc/" data-label="Name Keychain">
+              <div class="tool-icon">🔑</div>
+              <div class="tool-info">
+                <span class="tool-name">Name Keychain</span>
+                <span class="tool-path">/kc/</span>
+              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="tool-arrow">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+            </button>
+            <button class="tool-access-btn tool-ch" data-url="/ch/" data-label="Cardless">
+              <div class="tool-icon">💳</div>
+              <div class="tool-info">
+                <span class="tool-name">Cardless</span>
+                <span class="tool-path">/ch/</span>
+              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="tool-arrow">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+            </button>
+          </div>
+        </section>
+
+        <!-- ===== SETTINGS SECTION ===== -->
+        <section id="section-settings" class="content-section hidden">
+          <div class="section-header">
+            <h2>Pengaturan GitHub &amp; Upload</h2>
+          </div>
+          <div class="card" style="max-width: 600px; padding: 24px; background: #1e293b; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+            <p style="color: #94a3b8; font-size: 14px; margin-bottom: 20px; line-height: 1.5;">
+              Token GitHub disimpan di browser Anda (localStorage) secara privat dan aman. Token tidak akan disimpan di server atau dipublikasikan.
+            </p>
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label for="settings-github-token" style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600;">GitHub Personal Access Token (PAT)</label>
+              <input type="password" id="settings-github-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="width: 100%; padding: 10px 12px; background: #0f172a; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff;" />
+            </div>
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label for="settings-github-owner" style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600;">GitHub Owner / Username</label>
+              <input type="text" id="settings-github-owner" placeholder="scloudsdb" style="width: 100%; padding: 10px 12px; background: #0f172a; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff;" />
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+              <label for="settings-github-repo" style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600;">GitHub Repo</label>
+              <input type="text" id="settings-github-repo" placeholder="AWIEJIWAD" style="width: 100%; padding: 10px 12px; background: #0f172a; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff;" />
+            </div>
+            <button type="button" id="save-settings-btn" class="btn btn-primary" style="padding: 10px 20px;">Simpan Pengaturan</button>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- ===== PRODUCT MODAL ===== -->
+  <div id="product-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-title">Tambah Produk</h3>
+        <button id="modal-close" class="modal-close" aria-label="Tutup modal">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <form id="product-form" novalidate>
+        <input type="hidden" id="product-id" />
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="product-name">Nama Produk</label>
+            <input type="text" id="product-name" placeholder="Contoh: Clicker Fidget Neon" required />
+          </div>
+          <div class="form-group">
+            <label for="product-desc">Deskripsi</label>
+            <textarea id="product-desc" rows="3" placeholder="Deskripsi singkat produk..."></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="product-price">Harga (Rp)</label>
+              <input type="number" id="product-price" placeholder="25000" min="0" required />
+            </div>
+            <div class="form-group">
+              <label for="product-tool">Tool Terkait</label>
+              <select id="product-tool" required>
+                <option value="" disabled selected>Pilih tool...</option>
+                <option value="cg">CG — Clicker Generator</option>
+                <option value="kc">KC — Name Keychain</option>
+                <option value="ch">CH — Cardless</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="product-visible">Visibilitas</label>
+            <div class="toggle-row">
+              <input type="checkbox" id="product-visible" class="toggle-checkbox" />
+              <label for="product-visible" class="toggle-label">Tampilkan di halaman publik</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="product-image">Gambar Produk</label>
+            <div class="image-upload-area" id="image-upload-area">
+              <input type="file" id="product-image" accept="image/*" class="file-input" />
+              <div id="image-upload-placeholder" class="image-upload-placeholder">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                <span>Klik atau drag gambar ke sini</span>
+                <span class="upload-hint">PNG, JPG, WEBP (maks. 5 MB)</span>
+              </div>
+              <div id="image-preview-container" class="image-preview-container hidden">
+                <img id="image-preview" src="" alt="Preview produk" />
+                <button type="button" id="remove-image" class="remove-image" aria-label="Hapus gambar">×</button>
+              </div>
+            </div>
+            <div id="upload-progress" class="upload-progress hidden">
+              <div class="upload-progress-bar">
+                <div id="upload-progress-fill" class="upload-progress-fill"></div>
+              </div>
+              <span id="upload-status" class="upload-status">Mengunggah ke GitHub...</span>
+            </div>
+            <div style="margin-top: 10px;">
+              <label for="product-image-url" style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 4px;">Atau paste URL Gambar langsung (opsional):</label>
+              <input type="url" id="product-image-url" placeholder="https://..." style="width: 100%; padding: 8px 12px; background: #0f172a; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 13px;" />
+            </div>
+          </div>
+          <div id="modal-error" class="alert alert-error hidden" role="alert"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="modal-cancel" class="btn btn-ghost">Batal</button>
+          <button type="submit" id="modal-submit" class="btn btn-primary">
+            <span id="modal-submit-text">Simpan Produk</span>
+            <span id="modal-submit-spinner" class="btn-spinner hidden"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== DELETE CONFIRM MODAL ===== -->
+  <div id="delete-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+    <div class="modal-card modal-card-sm">
+      <div class="modal-header">
+        <h3 id="delete-modal-title">Hapus Produk?</h3>
+      </div>
+      <div class="modal-body">
+        <p>Yakin ingin menghapus produk <strong id="delete-product-name"></strong>? Tindakan ini tidak dapat dibatalkan.</p>
+      </div>
+      <div class="modal-footer">
+        <button id="delete-cancel" class="btn btn-ghost">Batal</button>
+        <button id="delete-confirm" class="btn btn-danger">
+          <span id="delete-confirm-text">Hapus</span>
+          <span id="delete-confirm-spinner" class="btn-spinner hidden"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TOAST CONTAINER ===== -->
+  <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+</body>
+</html>
