@@ -6,7 +6,7 @@
       "name": "Image to Clicker",
       "route": "both",
       "status": "live",
-      "appUrl": "/Clicker-Generator/",
+      "appUrl": "/cg/",
       "mwUrl": "https://makerworld.com/en/models/2980346",
       "blurb": "Turn any image, logo, or custom text into a clicker fidget."
     },
@@ -15,7 +15,7 @@
       "name": "Name Keychain Generator",
       "route": "both",
       "status": "live",
-      "appUrl": "/name-keychain/",
+      "appUrl": "/kc/",
       "blurb": "Personalized plate-style name keychains with live font preview, pixel & script styles, multi-language, 1 to 3 colour layers, and AMS & no-AMS printing."
     },
     {
@@ -23,7 +23,7 @@
       "name": "ID Card Holder Generator",
       "route": "app",
       "status": "live",
-      "appUrl": "/cardless/",
+      "appUrl": "/ch/",
       "blurb": "A cardless keychain designed perfectly to hold your Flazz, e-Money, or any standard CR80 card."
     }
   ],

@@ -170,6 +170,8 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
     capProud: 4.0,
     hollowBase: false,
       noSwitch: false,
+      noSwitchFlush: false,
+      noSwitchDoubleSided: false,
     fixedSize: null,
     designScale: 1,
     shapeSides: 6,
@@ -444,6 +446,8 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
       });
     },
     onNoSwitch: (on) => { store.set({ noSwitch: on }); debouncedRebuild(); },
+    onNoSwitchFlush: (on) => { store.set({ noSwitchFlush: on }); debouncedRebuild(); },
+    onNoSwitchDoubleSided: (on) => { store.set({ noSwitchDoubleSided: on }); debouncedRebuild(); },
     onHollowBase: (on) => {
       store.set({ hollowBase: on });
       debouncedRebuild();
@@ -605,6 +609,21 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
       const kc = store.get().keychain;
       const holeDiameterMm = Math.round(Math.max(3.0, Math.min(8.0, kc.holeDiameterMm + deltaMm)) * 10) / 10;
       store.set({ keychain: { ...kc, holeDiameterMm } });
+      debouncedRebuild();
+    },
+    onKeychainOuterSizeSet: (mm) => {
+      const kc = store.get().keychain;
+      store.set({ keychain: { ...kc, outerSizeMm: mm } });
+      debouncedRebuild();
+    },
+    onKeychainThicknessSet: (mm) => {
+      const kc = store.get().keychain;
+      store.set({ keychain: { ...kc, thicknessMm: mm } });
+      debouncedRebuild();
+    },
+    onKeychainZOffsetSet: (mm) => {
+      const kc = store.get().keychain;
+      store.set({ keychain: { ...kc, zOffsetMm: mm } });
       debouncedRebuild();
     },
     onKeychainOffsetSet: (mm) => {
@@ -1980,6 +1999,8 @@ export function mount(container: HTMLElement, host?: DesktopHost): () => void {
       capProud: s.capProud,
       hollowBase: s.hollowBase,
       noSwitch: s.noSwitch,
+      noSwitchFlush: s.noSwitchFlush,
+      noSwitchDoubleSided: s.noSwitchDoubleSided,
       // Null, not `{w:0,h:0}` — buildClicker treats any absent/degenerate size as "follow the
       // design", and the whole point of the control is that it is off until asked for.
       bodySize: s.fixedSize ?? undefined,

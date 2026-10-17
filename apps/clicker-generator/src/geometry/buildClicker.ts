@@ -1001,7 +1001,12 @@ export function buildClicker(
   const parts: ClickerPart[] = [];
 
   // --- Cap plate (backing + image layer), flat top, + stem underneath ---
-  const cap: Solid = extrudeAt(plate, backing + imageDepth, slabBottomZ);
+  const capH = params.noSwitch
+    ? (params.noSwitchFlush ? backing + imageDepth : backing)
+    : backing + imageDepth;
+  const cap: Solid = extrudeAt(plate, capH, slabBottomZ);
+
+
 
   // --- Image inlays: carved non-overlapping, smallest coverage first so detail
   //     colors win at shared boundaries. Clean even when all colors are flat.
@@ -1069,6 +1074,8 @@ export function buildClicker(
       }
     }
 
+
+
     parts.push(toPart(inlay, 'cap', 'top', r.filamentRgb, r.partName));
     
     // Group the 2D footprint by its level to carve a single hole per height level
@@ -1083,9 +1090,11 @@ export function buildClicker(
     const bottomZ = imageBottomZ + Math.min(0, heightShift);
     const holePrism = extrudeAt(hole2D, slabTopZ - bottomZ + 0.02, bottomZ - 0.01);
     base = track(base.subtract(holePrism));
+
+
   }
   for (const st of stemAts) base = track(base.add(st));
-  if (skirtLen > 0.4) {
+  if (skirtLen > 0.4 && !params.noSwitch) {
     // Root issue: any 2-D ring-minus-stemZone is algebraically identical to
     // punching a notch in the border. The only notch-free approach is to ensure
     // the skirt base plate's outer edge is already OUTSIDE the stem zone, so no
@@ -1145,15 +1154,25 @@ export function buildClicker(
   // subtraction does not cut a groove through the keychain loop/bridge.
   body = applyEdges(body, params.edgeSettings, bodyFootprint, bodyBottomZ, bodyTopZ, wellFloorZ);
 
-  // Optional keychain attachment: a loop tab or an inside hole, placed anywhere around
+    // Optional keychain attachment: a loop tab or an inside hole, placed anywhere around
   // the body edge. Built and cut BEFORE the well/socket subtraction so a loop rotated
   // near the well never leaves floating material.
   const kc = params.keychain;
   if (kc && kc.enabled) {
     const holeR = Math.max(1.5, (kc.holeDiameterMm ?? 5.2) / 2);
-    const th = Math.max(2.5, Math.min(4.0, (bodyTopZ - bodyBottomZ) * 0.35));
-    const zb = bodyBottomZ;
-    const { p, dir } = edgePointAt(bodyFootprint, kc.angleDeg ?? 90);
+    // In noSwitch (Photo Nametag) mode: loop sits flush with the plate (slabBottomZ -> slabTopZ).
+    // In normal clicker mode: loop sits on the body (bodyBottomZ -> bodyBottomZ + th).
+    const defaultTh = params.noSwitch
+      ? (params.noSwitchFlush ? backing + imageDepth : backing)
+      : Math.max(2.5, Math.min(4.0, (bodyTopZ - bodyBottomZ) * 0.35));
+    const th = kc.thicknessMm && kc.thicknessMm > 0 ? kc.thicknessMm : defaultTh;
+    
+    const defaultZb = params.noSwitch ? slabBottomZ : bodyBottomZ;
+    const zb = defaultZb + (kc.zOffsetMm ?? 0);
+    
+    // In noSwitch mode, the loop attaches to the plate edge, not the body bezel.
+    const loopEdgeFootprint = params.noSwitch ? plate : bodyFootprint;
+    const { p, dir } = edgePointAt(loopEdgeFootprint, kc.angleDeg ?? 90);
 
     // Apply offsetMm by shifting the base point p along the tangent vector (perpendicular to
     // dir). Sign chosen so that at the default bearing (90°, the top of the body) a POSITIVE
@@ -1182,11 +1201,13 @@ export function buildClicker(
 
     // Loop style: a disc tab with a ring hole, built in a local frame (+Y outward)
     // then rotated to the requested angle and moved onto the body edge point.
-    // The loop center is placed a full radius beyond the edge so the ENTIRE circle
+    // The anchor `p` is exactly on the edge. The tab's centre `[0, outward]`
     // sits outside the body outline — no overhang wall. The bridge rectangle
     // connects the loop back into the body, extending deep to avoid gaps on concave curves.
-    const loopR = Math.max(3.2, holeR + 1.8);
-    const outward = loopR; // full radius → circle just touches the body edge
+    const defaultLoopR = Math.max(3.2, holeR + 1.8);
+    let loopR = kc.outerSizeMm && kc.outerSizeMm > 0 ? kc.outerSizeMm / 2 : defaultLoopR;
+    loopR = Math.max(loopR, holeR + 0.8); // Ensure loop is at least 0.8mm thicker than the hole so it doesn't vanish
+    const outward = loopR; // full radius = circle just touches the body edge
     // `track()` on the outside only frees what `translate` RETURNED; the circle it was
     // translated from is its own WASM object and nothing deleted it. Same shape of leak at
     // every constructor-then-transform below — small each time, and this runs on every
@@ -1204,15 +1225,33 @@ export function buildClicker(
 
     let loop = extrudeAt(loopFootprint, th, zb);
     loop = bevelAddon(loop, loopFootprint, zb + th, zb);
-    body = track(body.add(loop));
+    if (params.noSwitch) {
+      base = track(base.add(loop));
+      // The keychain bridge may overlap the logo inlay area and fill back holes that
+      // were already carved. Re-carve every color hole so logo colors are never covered
+      // by the base-colour bridge material.
+      for (const [level, hole2D] of holesByLevel.entries()) {
+        const heightShift = level * (params.stepHeight ?? 0);
+        const bottomZ = imageBottomZ + Math.min(0, heightShift);
+        const recarve = extrudeAt(hole2D, slabTopZ - bottomZ + 0.02, bottomZ - 0.01);
+        base = track(base.subtract(recarve));
+      }
+    } else { body = track(body.add(loop)); }
 
     // Ring hole at the transformed loop centre (local [0, outward] → world).
     const rr = (rotDeg * Math.PI) / 180;
     const hcx = -outward * Math.sin(rr) + px;
     const hcy = outward * Math.cos(rr) + py;
     const hole = extrudeAt(track(track(CrossSection.circle(holeR, 48)).translate([hcx, hcy])), th + 2, zb - 1);
-    body = track(body.subtract(hole));
+    if (params.noSwitch) { base = track(base.subtract(hole)); } else { body = track(body.subtract(hole)); }
+
+    // parts[0] was snapshotted BEFORE the keychain was added to base. Update it now so
+    // the exported 3MF includes the loop geometry and all re-carved logo holes.
+    if (params.noSwitch) {
+      parts[0] = toPart(base, 'cap', 'top', params.baseFilamentRgb, 'top-base');
+    }
   }
+
 
   // Subtract the well and every socket afterwards to ensure the interior cavity is clean
   if (!params.noSwitch) body = track(body.subtract(well));
@@ -1468,7 +1507,7 @@ export function buildClicker(
     warnings.push('Base widened so the switch fits.');
   }
 
-  if (!body.isEmpty()) {
+  if (!body.isEmpty() && !params.noSwitch) {
     parts.push(toPart(body, 'body', 'base', params.bodyColorRgb, 'base-body'));
   }
 

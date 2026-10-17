@@ -105,6 +105,12 @@ export interface KeychainParams {
   angleDeg: number;
   /** Ring hole diameter, mm. Default 5.2. */
   holeDiameterMm: number;
+  /** Outer size (radius) of the loop, mm. Default is auto-calculated based on hole. */
+  outerSizeMm?: number;
+  /** Custom thickness (Z height) of the loop, mm. Default is auto-calculated. */
+  thicknessMm?: number;
+  /** Z-offset from the default placement height, mm. Default 0. */
+  zOffsetMm?: number;
   /** Lateral offset along the body edge tangent, mm. Positive = counter-clockwise
    *  shift from the angle-derived anchor, negative = clockwise. Default 0. */
   offsetMm: number;
@@ -142,6 +148,10 @@ export const DEFAULT_PREPROCESS: PreprocessParams = {
  *  into the top; the cap nests INSIDE that well (button-in-bezel). */
 export interface BuildParams {
   noSwitch?: boolean;
+  /** Photo Nametag flat mode: when true the logo is flush with the plate (no raised effect). */
+  noSwitchFlush?: boolean;
+  /** Photo Nametag double-sided mode: when true the logo is also placed on the bottom. */
+  noSwitchDoubleSided?: boolean;
   baseShape: BaseShapeKind;
   capWidthMm: number; // the cap (top) footprint; body = cap + tolerance + border
   topThickness: number; // solid base-color backing behind the image (min 1–2 mm)

@@ -37,7 +37,10 @@
     "dev:foldbox": "pnpm --filter foldbox dev:print",
     "build:foldbox": "pnpm --filter foldbox build",
     "render:topper": "node scripts/render-topper.mjs",
+    "dev:admin": "pnpm --filter admin dev",
+    "build:admin": "pnpm --filter admin build",
     "deploy:manual": "node scripts/deploy-manual.mjs"
+
   },
   "devDependencies": {
     "esbuild": "^0.24.2",

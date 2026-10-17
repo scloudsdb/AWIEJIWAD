@@ -65,6 +65,10 @@ export interface UiState {
   /** How far the cap stands proud of the body border at rest, mm. */
   capProud: number;
     noSwitch: boolean;
+  /** Photo Nametag flat mode: when true the logo is flush/flat with the plate surface. */
+  noSwitchFlush: boolean;
+  /** Photo Nametag double-sided mode: when true the logo is also placed on the bottom. */
+  noSwitchDoubleSided: boolean;
   /** Hollow the body's underside instead of printing it solid. */
   hollowBase: boolean;
   /** Lock the finished base to this outer size (mm), fitting the design inside it. Null =
@@ -199,6 +203,8 @@ export interface UiCallbacks {
   /** Button height above the bezel at rest, mm. */
   onCapProud(mm: number): void;
     onNoSwitch(on: boolean): void;
+  onNoSwitchFlush(on: boolean): void;
+  onNoSwitchDoubleSided(on: boolean): void;
   /** Hollow the body's underside. */
   onHollowBase(on: boolean): void;
   /** Lock the base to a size, or let it follow the design again (null). */
@@ -246,6 +252,9 @@ export interface UiCallbacks {
   onKeychainSize(deltaMm: number): void;
   /** Set the keychain attachment's fine offset along the body edge tangent, absolute mm. */
   onKeychainOffsetSet(mm: number): void;
+  onKeychainOuterSizeSet(mm: number): void;
+  onKeychainThicknessSet(mm: number): void;
+  onKeychainZOffsetSet(mm: number): void;
   /** Put the keyring loop back at the top of the body. */
   onKeychainReset(): void;
   onRemoveBg(on: boolean): void;
@@ -633,6 +642,9 @@ export function createUi(
           <div id="keychainBlockResetMount" style="display:none; margin-bottom: 12px;"></div>
 
           <div class="prow-stacked"><div id="keychainSizeMount"></div></div>
+          <div class="prow-stacked"><div id="keychainOuterSizeMount"></div></div>
+          <div class="prow-stacked"><div id="keychainThicknessMount"></div></div>
+          <div class="prow-stacked"><div id="keychainZOffsetMount"></div></div>
         </div>
         </div>
       </details>
@@ -1866,6 +1878,16 @@ export function createUi(
     });
     const hm = document.getElementById('hollowMount'); if (hm && hm.parentElement) hm.parentElement.insertBefore(nametagToggle, hm);
 
+  const nametagFlushToggle = toggleSwitch({
+    label: 'Flat logo (Flush Design)',
+    help: 'ON = logo is flat/flush with the plate surface. OFF = logo is raised above the plate (timbul). Use Image depth to control height.',
+    checked: initial.noSwitchFlush,
+    onChange: (v) => cb.onNoSwitchFlush(v),
+  });
+  if (hm && hm.parentElement) hm.parentElement.insertBefore(nametagFlushToggle, hm);
+
+  
+
     const hollowToggle = toggleSwitch({
     label: 'Hollow the base',
     help: 'Prints the base as a shell instead of a solid block, which saves a lot of filament on bigger clickers. The switch column and its surround stay solid. Off by default.',
@@ -2065,6 +2087,38 @@ export function createUi(
     },
   });
   $('keychainSizeMount').append(keychainSizeRow);
+
+  const keychainOuterSizeRow = stepperRow({
+    label: 'Outer size',
+    help: 'Outer diameter of the loop. Default is auto-calculated based on hole size.',
+    min: 0, max: 20, step: 0.2, value: initial.keychain.outerSizeMm ?? 0,
+    format: (v) => v === 0 ? 'Auto' : `${v.toFixed(1)} mm`,
+    onInput: (v) => {
+      // If stepping up from 0 (Auto), jump straight to a reasonable default size (~8.8mm)
+      // rather than 0.2mm which is smaller than the hole.
+      if (v > 0 && v < 6.0) v = 8.8; 
+      cb.onKeychainOuterSizeSet(v);
+    },
+  });
+  $('keychainOuterSizeMount').append(keychainOuterSizeRow);
+
+  const keychainThicknessRow = stepperRow({
+    label: 'Loop thickness',
+    help: 'Z height of the loop. Default matches the plate/body.',
+    min: 0, max: 10, step: 0.1, value: initial.keychain.thicknessMm ?? 0,
+    format: (v) => v === 0 ? 'Auto' : `${v.toFixed(1)} mm`,
+    onInput: (v) => cb.onKeychainThicknessSet(v),
+  });
+  $('keychainThicknessMount').append(keychainThicknessRow);
+
+  const keychainZOffsetRow = stepperRow({
+    label: 'Loop Z Offset',
+    help: 'Adjust the tinggi/rendah (Z placement) of the loop relative to the plate.',
+    min: -10, max: 10, step: 0.1, value: initial.keychain.zOffsetMm ?? 0,
+    format: (v) => `${v > 0 ? '+' : ''}${v.toFixed(1)} mm`,
+    onInput: (v) => cb.onKeychainZOffsetSet(v),
+  });
+  $('keychainZOffsetMount').append(keychainZOffsetRow);
 
   /** None / Fillet / Chamfer, shared by the two global edge rows (Shape & Size) and every
    *  per-part row in the floating Edges panel. Was a `<button class="edge-style-btn">` triple
@@ -2455,6 +2509,11 @@ export function createUi(
     capProudRow.setValue(RIM_SPAN - state.capProud);
     hollowToggle.setValue(state.hollowBase);
       nametagToggle.setValue(state.noSwitch);
+      nametagFlushToggle.setValue(state.noSwitchFlush);
+      
+      // Flush and double-sided toggles only visible when Photo Nametag mode is active
+      nametagFlushToggle.hidden = !state.noSwitch;
+      
       
       // Hide irrelevant settings if noSwitch is active
       if (state.noSwitch) {
@@ -2525,6 +2584,9 @@ export function createUi(
     keychainOffsetRowCtl.setValue(kc.offsetMm ?? 0);
     keychainHoleLast = kc.holeDiameterMm;
     keychainSizeRow.setValue(kc.holeDiameterMm);
+    keychainOuterSizeRow.setValue(kc.outerSizeMm ?? 0);
+    keychainThicknessRow.setValue(kc.thicknessMm ?? 0);
+    keychainZOffsetRow.setValue(kc.zOffsetMm ?? 0);
     removeBgToggle.setValue(state.removeBg);
     removeBgSvgToggle.setValue(state.removeBg);
     showSwitchToggle.setValue(state.showSwitch);

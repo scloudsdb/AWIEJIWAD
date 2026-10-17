@@ -208,34 +208,55 @@ export function buildCardHolder(
     lidSol = keep(lidSol.add(leftTabAdd));
     lidSol = keep(lidSol.add(leftHookAdd));
 
-    // --- APPLY TO TOP WALL (Y+) ---
-    // Rotate the blocks so they face the Y direction
+    // --- APPLY TO TOP WALL (Y+) - INSIDE OUT HINGE ---
+    const wallY = cardH/2;
+    const topTabDepth = tabDepth + 1.0; // 1.9mm thick for extra strength
+    const topTabBlock = keep(Manifold.cube([topTabDepth, tabW, lidPryH], true));
+    
+    const topTabY = wallY + topTabDepth/2;
+    const topHookY = wallY + topTabDepth; // Hook starts here and goes outward (+Y)
+    
+    // Lid parts
+    const topTabAdd = keep(topTabBlock.rotate([0, 0, 90]).translate([0, topTabY, lidPryZ]));
+    // hookSolid protrudes towards -X. If we rotate [0,0,-90], it protrudes towards +Y.
+    const topHookAdd = keep(hookSolid.rotate([0, 0, -90]).translate([0, topHookY, hookZ]));
+    
+    // Base cuts
+    // 1. Channel for the tab to slide into (open at the top)
+    const topChannelH = Math.abs(lidPryZ) * 2 + lidPryH + 2.0;
+    const topChannelBlock = keep(Manifold.cube([tabW + 0.4, topTabDepth + 0.05, topChannelH], true));
+    const topChannelCut = keep(topChannelBlock.translate([0, topTabY, 0])); 
+    
+    // 2. Pocket for the hook to snap into (will pierce the 2mm wall since tab is 1.9mm + hook 0.5mm)
+    const topPocketBlock = keep(Manifold.cube([hookW + 0.4, hookDepth + 0.2, holeH + 0.2], true));
+    const topPocketY = wallY + topTabDepth + (hookDepth + 0.2)/2;
+    const topPocketCut = keep(topPocketBlock.translate([0, topPocketY, hookZ]));
+    
+    backShellSol = keep(backShellSol.subtract(topChannelCut));
+    backShellSol = keep(backShellSol.subtract(topPocketCut));
+    lidSol = keep(lidSol.add(topTabAdd));
+    lidSol = keep(lidSol.add(topHookAdd));
+
+    // --- APPLY TO BOTTOM WALL (Y-) - OUTSIDE IN ---
     const basePryBlockY = keep(basePryBlock.rotate([0, 0, 90]));
     const holeBlockY = keep(holeBlock.rotate([0, 0, 90]));
     const tabBlockY = keep(tabBlock.rotate([0, 0, 90]));
     const hookSolidY = keep(hookSolid.rotate([0, 0, 90]));
     
-    const wallY = cardH/2;
-    const topBasePryY = wallY + wallT - pryDepth/2 + 0.01;
-    const topHoleY = wallY + (wallT - pryDepth)/2;
-    const topTabY = wallY + wallT - tabDepth/2;
-    const topHookY = topTabY - tabDepth/2; 
+    const origTopBasePryY = wallY + wallT - pryDepth/2 + 0.01;
+    const origTopHoleY = wallY + (wallT - pryDepth)/2;
+    const origTopTabY = wallY + wallT - tabDepth/2;
+    const origTopHookY = origTopTabY - tabDepth/2; 
     
-    const topBasePryCut = keep(basePryBlockY.translate([0, topBasePryY, basePryZ]));
-    const topHoleCut = keep(holeBlockY.translate([0, topHoleY, holeZ]));
-    const topTabAdd = keep(tabBlockY.translate([0, topTabY, lidPryZ]));
-    const topHookAdd = keep(hookSolidY.translate([0, topHookY, hookZ]));
+    const origTopBasePryCut = keep(basePryBlockY.translate([0, origTopBasePryY, basePryZ]));
+    const origTopHoleCut = keep(holeBlockY.translate([0, origTopHoleY, holeZ]));
+    const origTopTabAdd = keep(tabBlockY.translate([0, origTopTabY, lidPryZ]));
+    const origTopHookAdd = keep(hookSolidY.translate([0, origTopHookY, hookZ]));
 
-    // backShellSol = keep(backShellSol.subtract(topBasePryCut));
-    // backShellSol = keep(backShellSol.subtract(topHoleCut));
-    // lidSol = keep(lidSol.add(topTabAdd));
-    // lidSol = keep(lidSol.add(topHookAdd));
-
-    // --- APPLY TO BOTTOM WALL (Y-) ---
-    const bottomBasePryCut = keep(topBasePryCut.rotate([0, 0, 180]));
-    const bottomHoleCut = keep(topHoleCut.rotate([0, 0, 180]));
-    const bottomTabAdd = keep(topTabAdd.rotate([0, 0, 180]));
-    const bottomHookAdd = keep(topHookAdd.rotate([0, 0, 180]));
+    const bottomBasePryCut = keep(origTopBasePryCut.rotate([0, 0, 180]));
+    const bottomHoleCut = keep(origTopHoleCut.rotate([0, 0, 180]));
+    const bottomTabAdd = keep(origTopTabAdd.rotate([0, 0, 180]));
+    const bottomHookAdd = keep(origTopHookAdd.rotate([0, 0, 180]));
 
     backShellSol = keep(backShellSol.subtract(bottomBasePryCut));
     backShellSol = keep(backShellSol.subtract(bottomHoleCut));

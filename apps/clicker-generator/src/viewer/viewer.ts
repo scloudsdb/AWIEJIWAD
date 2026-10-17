@@ -470,11 +470,13 @@ export function createViewer(container: HTMLElement): Viewer {
     }
   };
   const onPointerDown = (e: PointerEvent) => {
+    if (e.button !== 0) return; // Only track left click for part selection
     downX = e.clientX;
     downY = e.clientY;
     downT = performance.now();
   };
   const onPointerUp = (e: PointerEvent) => {
+    if (e.button !== 0) return; // Only process left click
     // Only a tap (not an orbit drag) counts as a part click.
     if (Math.hypot(e.clientX - downX, e.clientY - downY) > 5) return;
     if (performance.now() - downT > 500) return;
@@ -499,10 +501,12 @@ export function createViewer(container: HTMLElement): Viewer {
     applyHighlight();
     pickCb?.(idx, e.clientX, e.clientY, e.shiftKey);
   };
+  const onContextMenu = (e: Event) => e.preventDefault();
   renderer.domElement.addEventListener('pointermove', onPointerMove);
   renderer.domElement.addEventListener('pointerleave', onPointerLeave);
   renderer.domElement.addEventListener('pointerdown', onPointerDown);
   renderer.domElement.addEventListener('pointerup', onPointerUp);
+  renderer.domElement.addEventListener('contextmenu', onContextMenu);
 
   function onPartPick(cb: (index: number | null, clientX: number, clientY: number, shiftKey: boolean) => void) {
     pickCb = cb;
@@ -533,6 +537,7 @@ export function createViewer(container: HTMLElement): Viewer {
     renderer.domElement.removeEventListener('pointerleave', onPointerLeave);
     renderer.domElement.removeEventListener('pointerdown', onPointerDown);
     renderer.domElement.removeEventListener('pointerup', onPointerUp);
+    renderer.domElement.removeEventListener('contextmenu', onContextMenu);
     clearGroup(capGroup);
     clearGroup(bodyGroup);
     buildPlate.dispose();

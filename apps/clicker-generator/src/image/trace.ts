@@ -65,7 +65,7 @@ export function traceRegions(
     and the threshold now follows `designMm`. At the default 35 mm cap this keeps about twice
     the detail the old constant did; at 80 mm, about ten times.
   */
-  const MIN_FEATURE_MM = 0.4; // one 0.4 mm nozzle — a feature thinner than this cannot print
+  const MIN_FEATURE_MM = 0.1; // Reduced from 0.4 to 0.1 to keep small eye highlights, let the slicer handle tiny dots
   const pxPerMm = maxSide / Math.max(1, designMm);
   const minRingArea = (MIN_FEATURE_MM * pxPerMm) * (MIN_FEATURE_MM * pxPerMm);
   const resampleStep = Math.max(0.5, maxSide / 900); // uniform contour spacing (px) - higher resolution

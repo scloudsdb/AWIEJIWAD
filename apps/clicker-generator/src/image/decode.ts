@@ -39,26 +39,54 @@ function getPica(): Pica {
   return picaInstance;
 }
 
+// Fallback to HTMLImageElement for SVGs or when createImageBitmap fails
+function loadViaImageTag(blob: Blob): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to decode image via HTMLImageElement'));
+    };
+    img.src = url;
+  });
+}
+
 // Bake EXIF orientation and avoid premultiply surprises. Very old engines throw on
-// the options bag — fall back to a plain decode there.
-async function decodeBitmap(blob: Blob): Promise<ImageBitmap> {
+// the options bag - fall back to a plain decode there.
+async function decodeBitmapOrImage(blob: Blob): Promise<ImageBitmap | HTMLImageElement> {
+  // SVGs fail natively in createImageBitmap in many browsers
+  if (blob.type === 'image/svg+xml' || blob.type.includes('svg')) {
+    return loadViaImageTag(blob);
+  }
+
   try {
     return await createImageBitmap(blob, {
       imageOrientation: 'from-image',
       premultiplyAlpha: 'none',
       colorSpaceConversion: 'default',
     });
-  } catch {
-    return await createImageBitmap(blob);
+  } catch (err1) {
+    try {
+      return await createImageBitmap(blob);
+    } catch (err2) {
+      return loadViaImageTag(blob);
+    }
   }
 }
 
 export async function loadFileToImage(file: File, maxSize = TARGET): Promise<RgbaImage> {
-  const bitmap = await decodeBitmap(file);
+  const bitmap = await decodeBitmapOrImage(file);
+  const w = 'naturalWidth' in bitmap ? bitmap.naturalWidth : bitmap.width;
+  const h = 'naturalHeight' in bitmap ? bitmap.naturalHeight : bitmap.height;
   try {
-    return await drawToImageData(bitmap, bitmap.width, bitmap.height, maxSize);
+    return await drawToImageData(bitmap, w || 300, h || 300, maxSize);
   } finally {
-    bitmap.close();
+    if ('close' in bitmap) (bitmap as any).close();
   }
 }
 
@@ -67,11 +95,18 @@ export async function loadUrlToImage(url: string, maxSize = TARGET): Promise<Rgb
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Failed to load image: ${url} (${res.status})`);
   const blob = await res.blob();
-  const bitmap = await decodeBitmap(blob);
+  // Sometimes fetch doesn't set SVG mime type correctly, infer from URL
+  const actualBlob = url.endsWith('.svg') && !blob.type.includes('svg') 
+    ? new Blob([blob], { type: 'image/svg+xml' }) 
+    : blob;
+    
+  const bitmap = await decodeBitmapOrImage(actualBlob);
+  const w = 'naturalWidth' in bitmap ? bitmap.naturalWidth : bitmap.width;
+  const h = 'naturalHeight' in bitmap ? bitmap.naturalHeight : bitmap.height;
   try {
-    return await drawToImageData(bitmap, bitmap.width, bitmap.height, maxSize);
+    return await drawToImageData(bitmap, w || 300, h || 300, maxSize);
   } finally {
-    bitmap.close();
+    if ('close' in bitmap) (bitmap as any).close();
   }
 }
 

@@ -35,7 +35,7 @@ export interface ColourCandidate {
   and the smallest real feature (the cheeks) 1.7%.
 */
 const CANDIDATE_MERGE = 0.08;
-const CANDIDATE_MIN_COVERAGE = 0.001;
+const CANDIDATE_MIN_COVERAGE = 0.0001;
 
 /**
  * Every distinct colour the picture contains, biggest first.
