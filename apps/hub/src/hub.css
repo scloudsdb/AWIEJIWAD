@@ -496,8 +496,11 @@ body {
   position: absolute;
   top: 12px;
   left: 12px;
+  z-index: 10;
+  pointer-events: none;
   background: rgba(15, 23, 42, 0.85);
   backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   border: 1px solid rgba(255, 255, 255, 0.15);
   padding: 4px 10px;
   border-radius: 999px;

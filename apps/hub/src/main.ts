@@ -106,8 +106,8 @@ function renderProductCards(products: Product[]): string {
       return `
       <article class="hub-product-card" data-tool="${escapeHtml(p.toolType)}">
         <div class="hub-product-img">
-          <span class="hub-product-tag">${getToolBadge(p.toolType)}</span>
           <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.src='/thumbs/clicker.png'" />
+          <span class="hub-product-tag">${getToolBadge(p.toolType)}</span>
         </div>
         <div class="hub-product-body">
           <h3 class="hub-product-name">${escapeHtml(p.name)}</h3>
@@ -205,14 +205,13 @@ function buildPage(): string {
     <a href="#katalog" class="mobile-nav-link">Katalog Produk</a>
     <a href="#tentang" class="mobile-nav-link">Tentang Kami</a>
     <a href="#keunggulan" class="mobile-nav-link">Keunggulan</a>
-    <a href="/admin/" style="color: #60a5fa; font-size: 0.95rem; margin-top: 0.5rem;">🔒 Admin Panel</a>
   </div>
 
   <!-- HERO -->
   <section class="hub-hero">
     <div class="hub-container">
       <div class="hub-hero__eyebrow">
-        <span>✨</span> Kustom 3D Print Presisi Tinggi
+        <span>✨</span> Kustom 3D Print Berkualitas &amp; Rapi
       </div>
       <h1 class="hub-hero__title">
         Aksesori 3D Print Custom <em>Sesuai Gayamu</em>
@@ -236,8 +235,8 @@ function buildPage(): string {
       <!-- Feature Badges -->
       <div class="hub-features" id="keunggulan">
         <div class="hub-feature-pill">
-          <span class="hub-feature-icon">🎯</span>
-          <span>Presisi 0.16mm</span>
+          <span class="hub-feature-icon">✨</span>
+          <span>Hasil Rapi &amp; Halus</span>
         </div>
         <div class="hub-feature-pill">
           <span class="hub-feature-icon">🎨</span>
@@ -245,7 +244,7 @@ function buildPage(): string {
         </div>
         <div class="hub-feature-pill">
           <span class="hub-feature-icon">🛡️</span>
-          <span>Bahan Kuat & Tahan</span>
+          <span>Bahan Kuat &amp; Awet</span>
         </div>
         <div class="hub-feature-pill">
           <span class="hub-feature-icon">⚡</span>
@@ -327,7 +326,7 @@ function buildPage(): string {
         &copy; ${new Date().getFullYear()} A&amp;I 3D Labs. All rights reserved.
       </p>
       <p style="margin: 0; color: #64748b; font-size: 0.8rem;">
-        Cetak 3D Berkualitas &middot; Indonesia &middot; <a href="/admin/">Admin Area</a>
+        Cetak 3D Berkualitas | Indonesia
       </p>
     </div>
   </footer>
