@@ -13,10 +13,20 @@ import { signOut } from 'firebase/auth';
 import { auth, db } from './firebase';
 
 // ─── Env vars ─────────────────────────────────────────────────────────────────
-const GITHUB_TOKEN = import.meta.env.VITE_GITHUB_TOKEN as string;
-const GITHUB_OWNER = import.meta.env.VITE_GITHUB_OWNER as string;
-const GITHUB_REPO  = import.meta.env.VITE_GITHUB_REPO as string;
+const GITHUB_TOKEN = (import.meta.env.VITE_GITHUB_TOKEN as string) || '';
+const GITHUB_OWNER = (import.meta.env.VITE_GITHUB_OWNER as string) || 'scloudsdb';
+const GITHUB_REPO  = (import.meta.env.VITE_GITHUB_REPO as string) || 'AWIEJIWAD';
 const SITE_DOMAIN  = (import.meta.env.VITE_SITE_DOMAIN as string) || 'ai3dlabs.site';
+
+function getGitHubToken(): string {
+  return localStorage.getItem('ai3dlabs_github_token') || GITHUB_TOKEN;
+}
+function getGitHubOwner(): string {
+  return localStorage.getItem('ai3dlabs_github_owner') || GITHUB_OWNER;
+}
+function getGitHubRepo(): string {
+  return localStorage.getItem('ai3dlabs_github_repo') || GITHUB_REPO;
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Product {
@@ -51,6 +61,7 @@ const productPrice    = document.getElementById('product-price') as HTMLInputEle
 const productTool     = document.getElementById('product-tool') as HTMLSelectElement;
 const productVisible  = document.getElementById('product-visible') as HTMLInputElement;
 const productImage    = document.getElementById('product-image') as HTMLInputElement;
+const productImageUrl = document.getElementById('product-image-url') as HTMLInputElement;
 const imageUploadArea = document.getElementById('image-upload-area') as HTMLDivElement;
 const imageUploadPlaceholder = document.getElementById('image-upload-placeholder') as HTMLDivElement;
 const imagePreviewContainer  = document.getElementById('image-preview-container') as HTMLDivElement;
@@ -82,8 +93,28 @@ const sidebarOverlay = document.getElementById('sidebar-overlay') as HTMLDivElem
 const navItems       = document.querySelectorAll<HTMLButtonElement>('.nav-item');
 const sectionProduk  = document.getElementById('section-produk') as HTMLElement;
 const sectionTools   = document.getElementById('section-tools') as HTMLElement;
+const sectionSettings = document.getElementById('section-settings') as HTMLElement;
 const topbarTitle    = document.getElementById('topbar-title') as HTMLHeadingElement;
 const toastContainer = document.getElementById('toast-container') as HTMLDivElement;
+
+// Settings elements
+const settingsGithubToken = document.getElementById('settings-github-token') as HTMLInputElement;
+const settingsGithubOwner = document.getElementById('settings-github-owner') as HTMLInputElement;
+const settingsGithubRepo  = document.getElementById('settings-github-repo') as HTMLInputElement;
+const saveSettingsBtn     = document.getElementById('save-settings-btn') as HTMLButtonElement;
+
+function initSettings(): void {
+  if (settingsGithubToken) settingsGithubToken.value = localStorage.getItem('ai3dlabs_github_token') || '';
+  if (settingsGithubOwner) settingsGithubOwner.value = localStorage.getItem('ai3dlabs_github_owner') || GITHUB_OWNER;
+  if (settingsGithubRepo)  settingsGithubRepo.value  = localStorage.getItem('ai3dlabs_github_repo')  || GITHUB_REPO;
+}
+
+saveSettingsBtn?.addEventListener('click', () => {
+  if (settingsGithubToken) localStorage.setItem('ai3dlabs_github_token', settingsGithubToken.value.trim());
+  if (settingsGithubOwner) localStorage.setItem('ai3dlabs_github_owner', settingsGithubOwner.value.trim());
+  if (settingsGithubRepo)  localStorage.setItem('ai3dlabs_github_repo',  settingsGithubRepo.value.trim());
+  showToast('Pengaturan GitHub berhasil disimpan ke browser!', 'success');
+});
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
 function showToast(message: string, type: 'success' | 'error' | 'info' = 'success'): void {
@@ -110,10 +141,11 @@ function toolLabel(type: string): string {
 }
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
-function showSection(section: 'produk' | 'tools'): void {
+function showSection(section: 'produk' | 'tools' | 'settings'): void {
   sectionProduk.classList.toggle('hidden', section !== 'produk');
   sectionTools.classList.toggle('hidden', section !== 'tools');
-  topbarTitle.textContent = section === 'produk' ? 'Produk' : 'Tools';
+  sectionSettings?.classList.toggle('hidden', section !== 'settings');
+  topbarTitle.textContent = section === 'produk' ? 'Produk' : section === 'tools' ? 'Tools' : 'Pengaturan';
   navItems.forEach((item) => {
     const active = item.dataset['section'] === section;
     item.classList.toggle('active', active);
@@ -123,7 +155,7 @@ function showSection(section: 'produk' | 'tools'): void {
 
 navItems.forEach((item) => {
   item.addEventListener('click', () => {
-    const sec = item.dataset['section'] as 'produk' | 'tools';
+    const sec = item.dataset['section'] as 'produk' | 'tools' | 'settings';
     showSection(sec);
     closeSidebar();
   });
@@ -276,6 +308,7 @@ function resetModal(): void {
   pendingImageUrl = '';
   pendingImageFilename = '';
   editingProductId = null;
+  if (productImageUrl) productImageUrl.value = '';
   hideImagePreview();
   hideModalError();
   uploadProgress.classList.add('hidden');
@@ -309,6 +342,7 @@ function hideImagePreview(): void {
   imageUploadPlaceholder.classList.remove('hidden');
   imagePreviewContainer.classList.add('hidden');
   productImage.value = '';
+  if (productImageUrl) productImageUrl.value = '';
 }
 
 function openModal(): void {
@@ -336,6 +370,7 @@ function openEditModal(id: string): void {
   productVisible.checked = product.visible;
   if (product.imageUrl) {
     pendingImageUrl = product.imageUrl;
+    if (productImageUrl) productImageUrl.value = product.imageUrl;
     showImagePreview(product.imageUrl);
   }
   openModal();
@@ -356,8 +391,11 @@ function closeDeleteModal(): void {
 
 // ─── Image upload to GitHub ───────────────────────────────────────────────────
 async function uploadImageToGitHub(file: File): Promise<string> {
-  if (!GITHUB_TOKEN || !GITHUB_OWNER || !GITHUB_REPO) {
-    throw new Error('GitHub env vars (VITE_GITHUB_TOKEN, VITE_GITHUB_OWNER, VITE_GITHUB_REPO) tidak dikonfigurasi.');
+  const token = getGitHubToken();
+  const owner = getGitHubOwner();
+  const repo  = getGitHubRepo();
+  if (!token) {
+    throw new Error('GitHub Token belum diisi. Masuk ke menu Pengaturan di sidebar untuk memasukkan token, atau isi URL gambar langsung.');
   }
 
   const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg';
@@ -379,11 +417,11 @@ async function uploadImageToGitHub(file: File): Promise<string> {
         }, 200);
 
         const response = await fetch(
-          `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/products/${filename}`,
+          `https://api.github.com/repos/${owner}/${repo}/contents/products/${filename}`,
           {
             method: 'PUT',
             headers: {
-              Authorization: `token ${GITHUB_TOKEN}`,
+              Authorization: `token ${token}`,
               'Content-Type': 'application/json',
               Accept: 'application/vnd.github+json',
             },
@@ -405,7 +443,9 @@ async function uploadImageToGitHub(file: File): Promise<string> {
         }
 
         pendingImageFilename = filename;
-        resolve(`https://${SITE_DOMAIN}/products/${filename}`);
+        const uploadedUrl = `https://${SITE_DOMAIN}/products/${filename}`;
+        if (productImageUrl) productImageUrl.value = uploadedUrl;
+        resolve(uploadedUrl);
       } catch (err) {
         reject(err);
       }
@@ -476,6 +516,15 @@ removeImageBtn.addEventListener('click', (e: MouseEvent) => {
   uploadProgressFill.style.width = '0%';
 });
 
+// Direct Image URL listener
+productImageUrl?.addEventListener('input', () => {
+  const url = productImageUrl.value.trim();
+  if (url) {
+    showImagePreview(url);
+    pendingImageUrl = url;
+  }
+});
+
 // ─── Add product button ───────────────────────────────────────────────────────
 addProductBtn.addEventListener('click', () => {
   editingProductId = null;
@@ -511,6 +560,10 @@ productForm.addEventListener('submit', async (e: Event) => {
   const price = Number(productPrice.value);
   const tool  = productTool.value as 'cg' | 'kc' | 'ch';
   const visible = productVisible.checked;
+
+  if (productImageUrl && productImageUrl.value.trim()) {
+    pendingImageUrl = productImageUrl.value.trim();
+  }
 
   if (!name)         { showModalError('Nama produk wajib diisi.'); return; }
   if (isNaN(price) || price < 0) { showModalError('Harga tidak valid.'); return; }
@@ -579,4 +632,5 @@ deleteConfirm.addEventListener('click', async () => {
 });
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
+initSettings();
 fetchProducts();
