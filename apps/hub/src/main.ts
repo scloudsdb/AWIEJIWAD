@@ -1,3 +1,5 @@
+import './hub.css';
+
 // @ts-ignore — Firebase loaded from CDN importmap
 import { initializeApp } from 'firebase/app';
 // @ts-ignore
@@ -12,6 +14,8 @@ const firebaseConfig = {
   appId:             import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
+const WA_NUMBER = '6281234567890'; // Dapat disesuaikan
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Product {
   id: string;
@@ -19,36 +23,36 @@ interface Product {
   description: string;
   price: number;
   imageUrl: string;
-  toolType: 'cg' | 'kc' | 'ch';
+  toolType: 'cg' | 'kc' | 'ch' | string;
   visible: boolean;
 }
 
-// ─── Fallback placeholder cards (offline / not configured) ────────────────────
+// ─── Fallback placeholder cards (offline / empty database) ────────────────────
 const PLACEHOLDER_PRODUCTS: Product[] = [
   {
     id: 'ph-1',
-    name: 'Clicker Fidget',
-    description: 'Clicker fidget 3D print custom dengan desain unik dan feel yang memuaskan.',
+    name: 'Clicker Fidget Custom',
+    description: 'Fidget clicker mekanik dengan sentuhan logo/tulisan kustom. Suara klik tactile dan memuaskan.',
     price: 25000,
-    imageUrl: '/thumbs/clicker-generator.webp',
+    imageUrl: '/thumbs/clicker.png',
     toolType: 'cg',
     visible: true,
   },
   {
     id: 'ph-2',
-    name: 'Name Keychain',
-    description: 'Gantungan kunci nama custom — ukuran, font, dan warna sesuai request.',
+    name: 'Name Keychain 3D',
+    description: 'Gantungan kunci nama multi-layer custom. Pilihan warna cerah, kuat, dan anti luntur.',
     price: 15000,
-    imageUrl: '/thumbs/name-keychain.webp',
+    imageUrl: '/thumbs/name-keychain.png',
     toolType: 'kc',
     visible: true,
   },
   {
     id: 'ph-3',
-    name: 'Card Holder',
-    description: 'Tempat kartu minimalis 3D print custom, muat hingga 5 kartu.',
+    name: 'ID Card Holder Minimalis',
+    description: 'Tempat kartu presisi untuk Flazz, e-Money, atau kartu akses gedung. Pas dan aman.',
     price: 20000,
-    imageUrl: '/thumbs/cardless.webp',
+    imageUrl: '/thumbs/cardless.png',
     toolType: 'ch',
     visible: true,
   },
@@ -60,7 +64,7 @@ function formatRupiah(price: number): string {
 }
 
 function escapeHtml(str: string): string {
-  return str
+  return (str || '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -68,32 +72,59 @@ function escapeHtml(str: string): string {
     .replace(/'/g, '&#39;');
 }
 
-// ─── Render ───────────────────────────────────────────────────────────────────
+function getToolBadge(toolType: string): string {
+  switch (toolType) {
+    case 'cg': return 'Clicker';
+    case 'kc': return 'Keychain';
+    case 'ch': return 'Card Holder';
+    default:   return 'Custom 3D';
+  }
+}
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let allProducts: Product[] = [];
+let currentFilter: string = 'all';
+
+// ─── Render Product Cards ─────────────────────────────────────────────────────
 function renderProductCards(products: Product[]): string {
-  return products
-    .map(
-      (p) => `
-    <article class="hub-product-card">
-      <div class="hub-product-img">
-        ${
-          p.imageUrl
-            ? `<img src="${escapeHtml(p.imageUrl)}" alt="${escapeHtml(p.name)}" loading="lazy" />`
-            : `<div class="hub-product-img-placeholder">
-                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                   <circle cx="8.5" cy="8.5" r="1.5"/>
-                   <polyline points="21 15 16 10 5 21"/>
-                 </svg>
-               </div>`
-        }
-      </div>
-      <div class="hub-product-body">
-        <h3 class="hub-product-name">${escapeHtml(p.name)}</h3>
-        <p class="hub-product-desc">${escapeHtml(p.description || '')}</p>
-        <div class="hub-product-price">${formatRupiah(p.price)}</div>
-      </div>
-    </article>`
-    )
+  const filtered = currentFilter === 'all'
+    ? products
+    : products.filter((p) => p.toolType === currentFilter);
+
+  if (filtered.length === 0) {
+    return `<div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: #94a3b8;">
+      Tidak ada produk pada kategori ini.
+    </div>`;
+  }
+
+  return filtered
+    .map((p) => {
+      const waMsg = encodeURIComponent(`Halo A&I 3D Labs, saya mau order produk: ${p.name} (${formatRupiah(p.price)}). Bisa info detailnya?`);
+      const waUrl = `https://wa.me/${WA_NUMBER}?text=${waMsg}`;
+      const imgUrl = p.imageUrl || '/thumbs/clicker.png';
+
+      return `
+      <article class="hub-product-card" data-tool="${escapeHtml(p.toolType)}">
+        <div class="hub-product-img">
+          <span class="hub-product-tag">${getToolBadge(p.toolType)}</span>
+          <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.src='/thumbs/clicker.png'" />
+        </div>
+        <div class="hub-product-body">
+          <h3 class="hub-product-name">${escapeHtml(p.name)}</h3>
+          <p class="hub-product-desc">${escapeHtml(p.description || '')}</p>
+          <div class="hub-product-footer">
+            <div class="hub-product-price">${formatRupiah(p.price)}</div>
+            <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="hub-product-order-btn">
+              Pesan
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </a>
+          </div>
+        </div>
+      </article>`;
+    })
     .join('');
 }
 
@@ -103,9 +134,8 @@ function renderSkeletons(count: number): string {
     .join('');
 }
 
-// ─── Fetch products from Firestore ────────────────────────────────────────────
+// ─── Fetch Products from Firestore ────────────────────────────────────────────
 async function loadProducts(container: HTMLElement): Promise<void> {
-  // Show skeletons
   container.innerHTML = renderSkeletons(3);
   container.setAttribute('aria-busy', 'true');
 
@@ -115,134 +145,220 @@ async function loadProducts(container: HTMLElement): Promise<void> {
     const q   = query(collection(db, 'products'), where('visible', '==', true));
     const snapshot = await getDocs(q);
 
-    const products: Product[] = snapshot.docs.map((d: { id: string; data: () => Omit<Product, 'id'> }) => ({
+    const fetched: Product[] = snapshot.docs.map((d: any) => ({
       id: d.id,
-      ...(d.data() as Omit<Product, 'id'>),
+      ...d.data(),
     }));
 
     container.setAttribute('aria-busy', 'false');
 
-    if (products.length === 0) {
-      container.innerHTML = `<p class="hub-products-empty">Belum ada produk yang tersedia. Cek lagi nanti!</p>`;
-      return;
+    if (fetched.length > 0) {
+      allProducts = fetched;
+    } else {
+      allProducts = PLACEHOLDER_PRODUCTS;
     }
 
-    container.innerHTML = renderProductCards(products);
+    container.innerHTML = renderProductCards(allProducts);
   } catch (err) {
-    console.warn('Firestore fetch failed, showing placeholders:', err);
+    console.warn('Firestore fetch failed, showing default placeholders:', err);
     container.setAttribute('aria-busy', 'false');
-    container.innerHTML = renderProductCards(PLACEHOLDER_PRODUCTS);
+    allProducts = PLACEHOLDER_PRODUCTS;
+    container.innerHTML = renderProductCards(allProducts);
   }
 }
 
-// ─── Build page HTML ──────────────────────────────────────────────────────────
+// ─── Build HTML Page ──────────────────────────────────────────────────────────
 function buildPage(): string {
   return `
 <div class="hub-page">
+  <div class="hub-ambient-top"></div>
 
-  <!-- NAV -->
-  <nav class="hub-nav" aria-label="Navigasi utama">
+  <!-- NAVIGATION -->
+  <header class="hub-nav" role="banner">
     <div class="hub-container hub-nav__inner">
-      <a href="/" class="hub-nav__logo" aria-label="A&amp;I 3D Labs - Beranda">
-        <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <rect width="28" height="28" rx="7" fill="currentColor"/>
-          <path d="M7 20L14 8l7 12H7z" fill="white" opacity="0.9"/>
-        </svg>
-        A&amp;I 3D Labs
+      <a href="/" class="hub-nav__logo" aria-label="A&I 3D Labs Home">
+        <div class="hub-nav__logo-icon">A</div>
+        <span>A&amp;I 3D Labs</span>
       </a>
+
+      <nav class="hub-nav__links" aria-label="Navigasi Desktop">
+        <a href="#katalog" class="hub-nav__link">Katalog Produk</a>
+        <a href="#tentang" class="hub-nav__link">Tentang Kami</a>
+        <a href="#keunggulan" class="hub-nav__link">Keunggulan</a>
+      </nav>
+
       <div class="hub-nav__right">
-        <div class="hub-nav__links">
-          <a href="#products" class="hub-nav__link">Produk</a>
-          <a href="#about" class="hub-nav__link">Tentang Kami</a>
-        </div>
+        <a href="https://wa.me/${WA_NUMBER}?text=Halo%20A%26I%203D%20Labs%2C%20saya%20mau%20tanya%20kustom%203D%20print" target="_blank" rel="noopener noreferrer" class="hub-btn hub-btn--wa" style="padding: 0.55rem 1.1rem; font-size: 0.85rem; width: auto;">
+          WhatsApp
+        </a>
+        <button id="hamburger-btn" class="hub-hamburger" aria-label="Buka menu navigasi" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
       </div>
     </div>
-  </nav>
+  </header>
+
+  <!-- MOBILE DRAWER -->
+  <div id="mobile-menu" class="hub-mobile-menu" aria-label="Menu Mobile">
+    <a href="#katalog" class="mobile-nav-link">Katalog Produk</a>
+    <a href="#tentang" class="mobile-nav-link">Tentang Kami</a>
+    <a href="#keunggulan" class="mobile-nav-link">Keunggulan</a>
+    <a href="/admin/" style="color: #60a5fa; font-size: 0.95rem; margin-top: 0.5rem;">🔒 Admin Panel</a>
+  </div>
 
   <!-- HERO -->
-  <section class="hub-hero hub-section">
+  <section class="hub-hero">
     <div class="hub-container">
-      <span class="hub-hero__eyebrow">Kustom 3D Print</span>
-      <h1 class="hub-hero__title">Custom 3D Print <em>Berkualitas</em></h1>
-      <p class="hub-hero__sub">
-        Aksesori 3D print custom sesuai keinginanmu. Keychain, clicker fidget, card holder — pesan sekarang!
-      </p>
-      <a href="#products" class="hub-btn hub-btn--primary hub-hero__cta">
-        Lihat Produk
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <line x1="5" y1="12" x2="19" y2="12"/>
-          <polyline points="12 5 19 12 12 19"/>
-        </svg>
-      </a>
-    </div>
-  </section>
-
-  <!-- PRODUCTS -->
-  <section id="products" class="hub-section hub-section--products">
-    <div class="hub-container">
-      <div class="hub-section__header">
-        <h2 class="hub-section__title">Produk Kami</h2>
-        <p class="hub-section__desc">Pilih desain yang kamu suka, kami cetak sesuai request.</p>
+      <div class="hub-hero__eyebrow">
+        <span>✨</span> Kustom 3D Print Presisi Tinggi
       </div>
-      <div id="products-grid" class="hub-products-grid" aria-live="polite" aria-label="Daftar produk"></div>
-    </div>
-  </section>
+      <h1 class="hub-hero__title">
+        Aksesori 3D Print Custom <em>Sesuai Gayamu</em>
+      </h1>
+      <p class="hub-hero__sub">
+        Fidget clicker, gantungan kunci nama personal, hingga ID card holder minimalis. Dibuat dengan material berkualitas dan pilihan warna bebas!
+      </p>
 
-  <!-- ABOUT -->
-  <section id="about" class="hub-section hub-section--about">
-    <div class="hub-container hub-about__inner">
-      <div class="hub-about__content">
-        <span class="hub-about__eyebrow">Tentang Kami</span>
-        <h2 class="hub-about__title">Dibuat dengan presisi, dikirim dengan cinta.</h2>
-        <p class="hub-about__desc">
-          A&amp;I 3D Labs adalah toko custom aksesori 3D print berbasis di Indonesia.
-          Kami menggunakan filamen berkualitas dan printer FDM yang dioptimalkan untuk
-          menghasilkan produk dengan detail tajam dan finish rapi.
-          Setiap pesanan dibuat sesuai permintaanmu — ukuran, warna, dan desain.
-        </p>
-        <a
-          href="https://wa.me/6281234567890"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="hub-btn hub-btn--primary hub-about__cta"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-            <path d="M11.999 2C6.477 2 2 6.477 2 12c0 1.77.463 3.431 1.27 4.877L2 22l5.27-1.243A9.935 9.935 0 0 0 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" fill-rule="evenodd" clip-rule="evenodd" opacity="0.3"/>
-            <path d="M12 2C6.477 2 2 6.477 2 12c0 1.77.463 3.431 1.27 4.877L2 22l5.27-1.243A9.935 9.935 0 0 0 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18a7.96 7.96 0 0 1-4.073-1.117l-.292-.173-3.027.714.725-2.964-.19-.304A7.96 7.96 0 0 1 4 12c0-4.418 3.582-8 8-8s8 3.582 8 8-3.582 8-8 8z"/>
+      <div class="hub-hero__actions">
+        <a href="#katalog" class="hub-btn hub-btn--primary">
+          Lihat Katalog Produk
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="6 9 12 15 18 9"></polyline>
           </svg>
-          Hubungi Kami
+        </a>
+        <a href="https://wa.me/${WA_NUMBER}?text=Halo%20A%26I%203D%20Labs%2C%20saya%20mau%20konsultasi%20desain%20kustom" target="_blank" rel="noopener noreferrer" class="hub-btn hub-btn--secondary">
+          Konsultasi Desain
         </a>
       </div>
-      <div class="hub-about__visual" aria-hidden="true">
-        <div class="hub-about__blob"></div>
-        <div class="hub-about__icon-group">
-          <span class="hub-about__icon">🖱️</span>
-          <span class="hub-about__icon hub-about__icon--offset">🔑</span>
-          <span class="hub-about__icon">💳</span>
+
+      <!-- Feature Badges -->
+      <div class="hub-features" id="keunggulan">
+        <div class="hub-feature-pill">
+          <span class="hub-feature-icon">🎯</span>
+          <span>Presisi 0.16mm</span>
+        </div>
+        <div class="hub-feature-pill">
+          <span class="hub-feature-icon">🎨</span>
+          <span>Bebas Pilih Warna</span>
+        </div>
+        <div class="hub-feature-pill">
+          <span class="hub-feature-icon">🛡️</span>
+          <span>Bahan Kuat & Tahan</span>
+        </div>
+        <div class="hub-feature-pill">
+          <span class="hub-feature-icon">⚡</span>
+          <span>Pengerjaan Cepat</span>
         </div>
       </div>
     </div>
   </section>
+
+  <!-- PRODUCTS SECTION -->
+  <section id="katalog" class="hub-section" style="background: rgba(15, 23, 42, 0.4);">
+    <div class="hub-container">
+      <div class="hub-section__header">
+        <h2 class="hub-section__title">Katalog Produk</h2>
+        <p class="hub-section__desc">Pilih kategori atau langsung pesan via WhatsApp sesuai pesanan Anda.</p>
+      </div>
+
+      <!-- Filter Tabs -->
+      <div class="hub-filter-tabs">
+        <button class="hub-filter-btn active" data-filter="all">Semua Produk</button>
+        <button class="hub-filter-btn" data-filter="cg">Clicker Fidget</button>
+        <button class="hub-filter-btn" data-filter="kc">Gantungan Kunci</button>
+        <button class="hub-filter-btn" data-filter="ch">Card Holder</button>
+      </div>
+
+      <div id="products-grid" class="hub-products-grid" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- ABOUT SECTION -->
+  <section id="tentang" class="hub-section hub-about">
+    <div class="hub-container">
+      <div class="hub-about__grid">
+        <div class="hub-about__content">
+          <h2>Dibuat dengan Presisi, Didesain untuk Anda</h2>
+          <p>
+            <strong>A&amp;I 3D Labs</strong> menghadirkan produk 3D print berkualitas tinggi yang fungsional dan estetik. Setiap produk dirancang dengan toleransi pas, finishing rapi, dan menggunakan filamen ramah lingkungan yang kokoh.
+          </p>
+
+          <div class="hub-about__specs">
+            <div class="hub-spec-box">
+              <div class="hub-spec-value">100%</div>
+              <div class="hub-spec-label">Custom Made</div>
+            </div>
+            <div class="hub-spec-box">
+              <div class="hub-spec-value">1-3 Hari</div>
+              <div class="hub-spec-label">Estimasi Produksi</div>
+            </div>
+          </div>
+
+          <a href="https://wa.me/${WA_NUMBER}?text=Halo%20A%26I%203D%20Labs%2C%20saya%20tertarik%20tahu%20lebih%20banyak" target="_blank" rel="noopener noreferrer" class="hub-btn hub-btn--primary" style="width: auto;">
+            Hubungi Kami Sekarang
+          </a>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--hub-card-border); border-radius: 20px; padding: 2rem; text-align: center;">
+          <div style="font-size: 3.5rem; margin-bottom: 1rem;">🖨️</div>
+          <h3 style="font-size: 1.25rem; margin: 0 0 0.5rem; color: #fff;">Bambu Lab Precision</h3>
+          <p style="color: var(--hub-text-muted); font-size: 0.9rem; margin: 0;">
+            Diproduksi menggunakan printer 3D generasi terbaru dengan multi-color printing untuk gradasi dan kombinasi warna yang tajam.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FLOATING WA BUTTON -->
+  <a href="https://wa.me/${WA_NUMBER}?text=Halo%20A%26I%203D%20Labs%2C%20saya%20mau%20tanya%20produk" target="_blank" rel="noopener noreferrer" class="hub-float-wa" aria-label="Chat WhatsApp">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.275.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.099.824zm-3.423-10.416c-5.522 0-10 4.477-10 10 0 1.77.463 3.431 1.27 4.877l-1.278 4.673 4.809-1.261a9.96 9.96 0 0 0 5.199 1.455h.004c5.523 0 10-4.478 10-10 0-5.523-4.477-10-10.004-10z"/>
+    </svg>
+    <span>Chat WhatsApp</span>
+  </a>
 
   <!-- FOOTER -->
   <footer class="hub-footer">
     <div class="hub-container">
-      <p>&copy; ${new Date().getFullYear()} A&amp;I 3D Labs. Semua hak dilindungi undang-undang.</p>
-      <p class="hub-footer__sub">Dibuat dengan ❤️ di Indonesia · Custom 3D Print</p>
+      <p style="margin: 0 0 0.5rem; font-weight: 600; color: #e2e8f0;">
+        &copy; ${new Date().getFullYear()} A&amp;I 3D Labs. All rights reserved.
+      </p>
+      <p style="margin: 0; color: #64748b; font-size: 0.8rem;">
+        Cetak 3D Berkualitas &middot; Indonesia &middot; <a href="/admin/">Admin Area</a>
+      </p>
     </div>
   </footer>
-
 </div>
   `;
 }
 
-// ─── Init ─────────────────────────────────────────────────────────────────────
+// ─── Initialize ───────────────────────────────────────────────────────────────
 const appEl = document.getElementById('app');
 if (appEl) {
   appEl.innerHTML = buildPage();
 
-  // Smooth scroll for nav anchor links
+  // Mobile menu toggle
+  const hamburgerBtn = document.getElementById('hamburger-btn');
+  const mobileMenu   = document.getElementById('mobile-menu');
+
+  if (hamburgerBtn && mobileMenu) {
+    hamburgerBtn.addEventListener('click', () => {
+      const isOpen = mobileMenu.classList.toggle('open');
+      hamburgerBtn.setAttribute('aria-expanded', String(isOpen));
+    });
+
+    document.querySelectorAll('.mobile-nav-link').forEach((link) => {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.remove('open');
+        hamburgerBtn.setAttribute('aria-expanded', 'false');
+      });
+    });
+  }
+
+  // Smooth scroll
   document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((link) => {
     link.addEventListener('click', (e: Event) => {
       const href = (e.currentTarget as HTMLAnchorElement).getAttribute('href');
@@ -255,8 +371,20 @@ if (appEl) {
     });
   });
 
-  // Load products
+  // Filter tabs
   const productsGrid = document.getElementById('products-grid');
+  document.querySelectorAll<HTMLButtonElement>('.hub-filter-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.hub-filter-btn').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset['filter'] || 'all';
+      if (productsGrid) {
+        productsGrid.innerHTML = renderProductCards(allProducts);
+      }
+    });
+  });
+
+  // Load products from Firestore
   if (productsGrid) {
     loadProducts(productsGrid);
   }
